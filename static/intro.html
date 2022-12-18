@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/index.css" />
+    <link rel="stylesheet" href="/css/intro.css" />
+
+    <title>Welcome</title>
+</head>
+
+<body>
+    <div id="robotContainer">
+        <img src="/images/robot.png">
+    </div>
+    <form action="/survey" class="mid-box">
+        <div style="margin:auto 0;">
+            <h1>Welcome</h1>
+            <p>Please fill out the following settings and optional demographic questions</p>
+
+            <div class="question">
+
+                <label for="musicSwitch" style="margin-bottom: 1%;">Music</label>
+
+                <label class="switch">
+
+                    <input name="musicSwitch" type="checkbox" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="question">
+
+                <label for="narrationSwitch" style="margin-bottom: 1%;">Narration</label>
+
+                <label class="switch">
+                    <input name="narrationSwitch" type="checkbox" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="question">
+                <label for="ageDropDown" style="margin-bottom: 1%;">Age</label>
+                <select name="ageDropDown">
+                    <option value="" selected="selected" disabled="disabled">-- select one --</option>
+                    <option value="0">&lt;14</option>
+                    <option value="1">14-18</option>
+                    <option value="2">19-22</option>
+                    <option value="2">23-29</option>
+                    <option value="3">30-39</option>
+                    <option value="4">40-49</option>
+                    <option value="5">50-59</option>
+                    <option value="6">60-69</option>
+                    <option value="7">70-79</option>
+                    <option value="8">70+</option>
+
+
+
+                </select>
+            </div>
+            <div class="question">
+                <label for="experienceWithAIRange" style="margin-bottom: 1%;">How much experience do you have with
+                    AI?</label>
+                <div style="padding:1%; display: flex">
+                    <span class="leftlabel">None</span>
+                    <input type="range" step="1" min="1" max="10" value="5" class="range" id="experienceWithAIRange"
+                        name="experienceWithAIRange">
+                    <span class="rightlabel">I'm an expert</span>
+                </div>
+            </div>
+            <div class="question">
+                <label for="education" style="margin-bottom: 1%;">What is your current level of education?<label>
+                        <select class="form-control dropdown" id="education" name="education">
+                            <option value="" selected="selected" disabled="disabled">-- select one --</option>
+                            <option value="No formal education">No formal education</option>
+                            <option value="Primary education">Primary education</option>
+                            <option value="Secondary education">Secondary education or high school</option>
+                            <option value="GED">GED</option>
+                            <option value="Vocational qualification">Vocational qualification</option>
+                            <option value="Bachelor's degree">Bachelor's degree</option>
+                            <option value="Master's degree">Master's degree</option>
+                            <option value="Doctorate or higher">Doctorate or higher</option>
+                        </select>
+            </div>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+    <div id="anonContainer">
+
+        <img src="/images/anomymous.png">
+    </div>
+</body>
+
+</html>
