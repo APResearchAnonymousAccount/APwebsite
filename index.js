@@ -18,9 +18,9 @@ app.get("/", async (req, res) => {
 app.post("/newUser", async (req, res) => {
     console.log(req.body)
     
-    res.cookie("userId", randomBytes(20).toString('base64'))
+    //res.cookie("userId", randomBytes(20).toString('base64'))
     
-    return res.status(301).redirect("/survey")
+    return res.status(301).redirect("/intro")
 
 });
 app.get("/intro", async (req, res) => {
@@ -29,7 +29,7 @@ app.get("/intro", async (req, res) => {
 
     }
     else{
-        res.sendFile(path.join(__dirname, '/static/survey.html'))
+        res.sendFile(path.join(__dirname, '/static/intro.html'))
 
     }
 });

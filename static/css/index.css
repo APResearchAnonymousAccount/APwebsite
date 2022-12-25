@@ -73,9 +73,12 @@ h1 {
 
 }
 
-.mid-box {
+#mid-box {
     padding: 3%;
     display: flex;
+    vertical-align: middle;
+    text-align: center;
+    align-items: center;
     border-radius: 5%;
     background-color: rgb(25, 39, 52);
     top: 50%;
@@ -86,6 +89,10 @@ h1 {
     transform: translate(-50%, -50%);
 }
 
+form {
+    display: flex;
+    vertical-align: middle;
+}
 .question {
     text-align: left;
     font-size: 1rem;
@@ -162,4 +169,10 @@ img {
     background-image: linear-gradient(270deg, #06af005e,black);
 
 
+}
+.introText {
+    font-size: 30px;
+    width: 100%;
+    font-family: monospace;
+    text-align: left;
 }
