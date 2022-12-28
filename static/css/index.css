@@ -222,3 +222,11 @@ img {
         left: 25%;
     }
 }
+.survey-box {
+    display: block;
+}
+.survey-box:hover {
+    display: block;
+    background-color: rgb(20, 34, 48);
+
+}

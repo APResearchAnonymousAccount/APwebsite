@@ -11,47 +11,27 @@ const run = (sql, params) => {
         });
     });
 };
-const initDB = async function () {
-    await run(`
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        uid TEXT,
-        music BOOL,
-        narration BOOL,
-        age TINYINT,
-        experience TINYINT,
-        education TEXT
-    );
-    `, []);
-    await run(`
-    CREATE TABLE IF NOT EXISTS answers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        qid INTEGER NOT NULL,
-        uid INTEGER NOT NULL,
-        acc BOOL
-    );
-    `, []);
-}
-const newUser = async (uid, music, narration, age, experience, education) => {
 
-    const [{ check }] = await run(`
+const newUser = async (uid, music, narration, age, experience, education,referer) => {
+
+    var check = await run(`
         SELECT count(*) as count
         FROM users
         WHERE uid = ?;
     `, [uid]);
-    if (check > 0) {
+    if (check[0].count > 0) {
         return -1;
     }
     await run(`
-        INSERT INTO users (uid,music,narration,age,experience,education) VALUES (?,?,?,?,?,?)
+        INSERT INTO users (uid,music,narration,age,experience,education,referer) VALUES (?,?,?,?,?,?,?)
 
-    `, [uid, music, narration, age, experience, education]);
-    const [{ ret }] = await run(`
+    `, [uid, music, narration, age, experience, education,referer]);
+    var ret = await run(`
         SELECT count(*) as count
         FROM users
         WHERE uid = ?;
     `, [uid]);
-    return ret;
+    return ret[0].count;
 };
 const logAnswer = async (qid, uid, acc) => {
 
@@ -60,4 +40,4 @@ const logAnswer = async (qid, uid, acc) => {
 
     `, [qid, uid, acc]);
 };
-module.exports = { initDB, newUser, logAnswer };``
+module.exports = { newUser, logAnswer };``

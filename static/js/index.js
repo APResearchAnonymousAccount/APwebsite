@@ -1,10 +1,18 @@
-
+const queryString = window.location.search;
+const parameters = new URLSearchParams(queryString);
+const referer = parameters.get('referer');
+var infoForm = document.getElementById("mid-box").children[0]
+var refererInput = document.createElement("input")
+refererInput.setAttribute("type", "hidden");
+refererInput.setAttribute("name", "referer");
+refererInput.setAttribute("value", referer);
+infoForm.appendChild(refererInput)
 var superIndex = 0;
 var qIndex = 0
-if(document.cookie["userId"] != undefined){
+if (document.cookie["userId"] != undefined) {
     surveyTransition()
 }
-
+var maxQs = 10
 
 function intro() {
 
@@ -20,15 +28,15 @@ function intro() {
     var midBoxHeight = midBox.clientHeight;
     midBoxHeight -= parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom);
 
-    const fontSize = Math.floor((midBoxWidth+midBoxHeight)/50)
-    const letterWidth = 54.2/3 * fontSize/30
-    var lettersMax = (midBoxWidth-midBoxWidth%letterWidth)/letterWidth
+    const fontSize = Math.floor((midBoxWidth + midBoxHeight) / 50)
+    const letterWidth = 54.2 / 3 * fontSize / 30
+    var lettersMax = (midBoxWidth - midBoxWidth % letterWidth) / letterWidth
     console.log(lettersMax)
     midBox.style.display = "Block"
     var introTextBox = document.createElement("p")
     introTextBox.classList.add("introText");
     introTextBox.style.fontFamily = "monospace"
-    introTextBox.style.fontSize = fontSize+"px"
+    introTextBox.style.fontSize = fontSize + "px"
 
     introTextBox.innerHTML = "█"
     midBox.appendChild(introTextBox)
@@ -60,7 +68,7 @@ function intro() {
                 if (letter == " ") {
                     wordIndex++;
                     //console.log(currentLine + " | "+currentLine.length+" + "+split[wordIndex].length+" / "+lettersMax)
-                    if(currentLine.length+split[wordIndex].length >= lettersMax){
+                    if (currentLine.length + split[wordIndex].length >= lettersMax) {
                         introTextBox.innerHTML += "<br>"
                         currentLine = ""
                     }
@@ -90,17 +98,17 @@ function intro() {
         midBox.append(nextButton)
     }
 }
-function fade() { 
-    var toFade = [document.getElementById("robotContainer"),document.getElementById("anonContainer"),...(document.querySelectorAll("#mid-box *"))]
+function fade() {
+    var toFade = [document.getElementById("robotContainer"), document.getElementById("anonContainer"), ...(document.querySelectorAll("#mid-box *"))]
     fadeLength = 4;
-    toFade.forEach((element) => {element.style.animation = "fadeOut "+fadeLength+"s forwards";})
-    setTimeout(surveyTransition,fadeLength*1000)
+    toFade.forEach((element) => { element.style.animation = "fadeOut " + fadeLength + "s forwards"; })
+    setTimeout(surveyTransition, fadeLength * 1000)
 
 
 
 }
 function surveyTransition() {
-        
+
     var midBox = document.getElementById("mid-box")
     midBox.innerHTML = ""
     document.getElementById("robotContainer").remove()
@@ -115,10 +123,34 @@ function surveyTransition() {
     body.appendChild(leftBox)
     body.appendChild(rightBox)
     midBox.remove();
-    setTimeout(survey,4*1000)
+    setTimeout(surveyQuestion, 4 * 1000)
 
 
 }
-function survey() {
 
+async function surveyQuestion() {
+    var qJSON = await fetch('/getQuestion')
+    var question = await qJSON.json()
+    var side = Math.round(Math.random())
+    var aiBox = side ? document.getElementById("leftSurveyBox") : document.getElementById("rightSurveyBox")
+    var humanBox = side ? document.getElementById("rightSurveyBox") : document.getElementById("leftSurveyBox")
+    aiBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.aiText
+    humanBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.text
+    humanBox.setAttribute('onclick', "submit(false,"+question.qid+")")
+    aiBox.setAttribute('onclick', "submit(true,"+question.qid+")")
+
+}
+async function submit(acc,qid) {
+    var xhr = new XMLHttpRequest();
+    var url = "/postAnswer";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    var data = JSON.stringify({ acc: acc, qid: qid });
+    xhr.send(data);
+
+    if(qIndex < maxQs){
+        qIndex++;
+        
+        surveyQuestion()
+    }
 }
