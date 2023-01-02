@@ -11,60 +11,33 @@ const run = (sql, params) => {
         });
     });
 };
-await run(`
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    uid TEXT NOT NULL,
-    music BOOL,
-    narration BOOL,
-    age TINYINT,
-    experience TINYINT,
-    education TEXT NOT NULL
-);
-`, []);
-await run(`
-CREATE TABLE IF NOT EXISTS questions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    aiText TEXT NOT NULL,
-    humanText TEXT NOT NULL
-);
-`, []);
-export const newUser = async (uid,music,narration,age,experience,education) => {
 
-    const [{ check }] = await run(`
+const newUser = async (uid, music, narration, age, experience, education,referer) => {
+
+    var check = await run(`
         SELECT count(*) as count
-        FROM queue
+        FROM users
         WHERE uid = ?;
     `, [uid]);
-    if (check > 0) {
+    if (check[0].count > 0) {
         return -1;
     }
     await run(`
-        INSERT INTO users (uid,music,narration,age,experience,education) VALUES (?,?,?,?,?,?)
+        INSERT INTO users (uid,music,narration,age,experience,education,referer) VALUES (?,?,?,?,?,?,?)
 
-    `, [uid,music,narration,age,experience,education]);
-    const [{ ret }] = await run(`
+    `, [uid, music, narration, age, experience, education,referer]);
+    var ret = await run(`
         SELECT count(*) as count
-        FROM queue
+        FROM users
         WHERE uid = ?;
-    `, uid);
-    return ret;
+    `, [uid]);
+    return ret[0].count;
 };
-export const logQ = async () => {
-    const request = await run(`
-        SELECT url, ip
-        FROM queue
-        ORDER BY id ASC
-        LIMIT 1;
-    `, []);
-    if (request.length === 0) {
-        return undefined;
-    }
-    const [{ url, ip }] = request;
-    // Delete based off of url and ip in case there are duplicates
+const logAnswer = async (qid, uid, acc) => {
+
     await run(`
-        DELETE FROM queue
-        WHERE url = ? AND ip = ?;
-    `, [url, ip]);
-    return url;
+        INSERT INTO answers (qid, uid, acc) VALUES (?,?,?)
+
+    `, [qid, uid, acc]);
 };
+module.exports = { newUser, logAnswer };``
