@@ -11,8 +11,15 @@ const run = (sql, params) => {
         });
     });
 };
-
-const newUser = async (uid, music, narration, age, experience, education,referer) => {
+const checkUser = async (uid) => {
+    var check = await run(`
+    SELECT count(*) as count
+    FROM users
+    WHERE uid = ?;
+`, [uid]);
+    return check[0]
+}
+const newUser = async (uid, music, narration, age, experience, education, referer) => {
 
     var check = await run(`
         SELECT count(*) as count
@@ -25,7 +32,7 @@ const newUser = async (uid, music, narration, age, experience, education,referer
     await run(`
         INSERT INTO users (uid,music,narration,age,experience,education,referer) VALUES (?,?,?,?,?,?,?)
 
-    `, [uid, music, narration, age, experience, education,referer]);
+    `, [uid, music, narration, age, experience, education, referer]);
     var ret = await run(`
         SELECT count(*) as count
         FROM users
@@ -40,4 +47,26 @@ const logAnswer = async (qid, uid, acc) => {
 
     `, [qid, uid, acc]);
 };
-module.exports = { newUser, logAnswer };``
+const getSettings = async (uid) => {
+    if (uid != null) {
+        var settings = await run(`
+    SELECT music, narration
+    FROM users
+    WHERE uid = ?;
+`, [uid]);
+        return settings
+
+    }
+};
+const getAnswerList = async (uid) => {
+    if (uid != null) {
+        var settings = await run(`
+    SELECT qid
+    FROM answers
+    WHERE uid = ?;
+`, [uid]);
+        return settings
+
+    }
+};
+module.exports = { newUser, logAnswer, getSettings,getAnswerList,checkUser }; ``

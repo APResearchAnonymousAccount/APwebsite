@@ -20,7 +20,6 @@ app.get("/", async (req, res) => {
 
 });
 app.post("/newUser", async (req, res) => {
-    console.log(req.body)
     var ret;
     var count = 0;
     while(ret != 1){
@@ -34,23 +33,69 @@ app.post("/newUser", async (req, res) => {
     }
     res.cookie("userId", uid)
     
-    return res.status(301).redirect("/intro")
+    return res.status(301).redirect('/intro')
 
 });
 app.get("/getQuestion", async (req, res) => {
-    console.log("q")
-    var qid =  Math.floor(Math.random() * question_list.length)
+    var uid = req.cookies.userId
+    if(uid == undefined){
+        return res.status(302).redirect("/")
+    }
+    var uList = await database.getAnswerList(uid)
+    uList.forEach((element,index) => {
+        uList[index] = element.qid
+    });
+    var qid = Math.floor(Math.random() * question_list.length)
+    if(uList.length == question_list.length){
+        return res.status(301).redirect('/end.html')
+    }
+    var i = 0;
+    while(uList.includes(qid) == true){
+        i++
+        qid++
+        qid = qid % question_list.length
+        if(i > question_list.length){
+            console.log("bad")
+            break;
+            
+
+        }
+    }
     var question = question_list[qid]
     question.qid = qid;
+
     return res.json(question)
+
+});
+app.get("/getSettings", async (req, res) => {
+    var uid = req.cookies.userId
+    var settings = []
+    if(uid == undefined){
+        return res.status(400)
+    }
+    let check = (await database.checkUser(uid)).count
+    if(check == 0){
+        settings[0] = {}
+        res.cookie('userId', "", {expires: new Date(Date.now())});
+        return res.json(settings[0])
+    }
+
+    settings = await database.getSettings(uid)
+
+    var uList = await database.getAnswerList(uid)
+    uList.forEach((element,index) => {
+        uList[index] = element.qid
+    });
+    settings[0].qIndex = uList.length
+    return res.json(settings[0])
 
 });
 app.post("/postAnswer", async (req, res) => {
     var question = req.body;
-    console.log(question)
     database.logAnswer(question.qid,req.cookies.userId,question.acc)
     return res.status(200)
 });
+
 /*app.get("/survey", async (req, res) => {
     if(req.cookies.userId == undefined){
         return res.status(302).redirect("/")

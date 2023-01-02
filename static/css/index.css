@@ -198,12 +198,42 @@ img {
     }
 }
 
+#message {
+    position: fixed;
+    animation: 2s linear slide-across-from-right forwards;
+    transform: translate(-100%, 75vh);
+    text-align: center;
+    font-size: xx-large;
+    font-family: "Red Hat Mono", monospace;
+    
+}
+
+@keyframes slide-across-from-right {
+    0% {
+        transform: translate(-100%, 75vh)
+    }
+
+    25% {
+        transform: translate(calc(50vw - 50%), 75vh)
+    }
+
+    75% {
+        transform: translate(calc(50vw - 50%), 75vh)
+    }
+
+    100% {
+        transform: translate(100vw, 75vh)
+    }
+}
+
 #leftSurveyBox {
     animation: slideLeft 4s forwards
 }
+
 #rightSurveyBox {
     animation: slideRight 4s forwards
 }
+
 @keyframes slideLeft {
     0% {
         left: 50%;
@@ -213,6 +243,7 @@ img {
         left: 75%;
     }
 }
+
 @keyframes slideRight {
     0% {
         left: 50%;
@@ -222,11 +253,45 @@ img {
         left: 25%;
     }
 }
+
+@keyframes slideBackFromLeft {
+    0% {
+        left: 75%;
+    }
+
+    100% {
+        left: 50%;
+    }
+}
+
+@keyframes slideBackFromRight {
+    0% {
+        left: 25%;
+    }
+
+    100% {
+        left: 50%;
+    }
+}
+
 .survey-box {
     display: block;
+
+
 }
+
 .survey-box:hover {
     display: block;
     background-color: rgb(20, 34, 48);
+
+}
+
+.surveyFeedbackBgImage {
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    height: auto;
+    position: absolute;
 
 }
