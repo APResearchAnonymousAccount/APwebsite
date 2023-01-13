@@ -40,12 +40,12 @@ const newUser = async (uid, music, narration, age, experience, education, refere
     `, [uid]);
     return ret[0].count;
 };
-const logAnswer = async (qid, uid, acc) => {
+const logAnswer = async (hid, aiid, uid, acc) => {
 
     await run(`
-        INSERT INTO answers (qid, uid, acc) VALUES (?,?,?)
+        INSERT INTO answers (hid,aiid, uid, acc) VALUES (?,?,?,?)
 
-    `, [qid, uid, acc]);
+    `, [hid, aiid, uid, acc]);
 };
 const getSettings = async (uid) => {
     if (uid != null) {
@@ -60,13 +60,13 @@ const getSettings = async (uid) => {
 };
 const getAnswerList = async (uid) => {
     if (uid != null) {
-        var settings = await run(`
-    SELECT qid
+        var answers = await run(`
+    SELECT hid, aiid
     FROM answers
     WHERE uid = ?;
 `, [uid]);
-        return settings
+        return answers
 
     }
 };
-module.exports = { newUser, logAnswer, getSettings,getAnswerList,checkUser }; ``
+module.exports = { newUser, logAnswer, getSettings, getAnswerList, checkUser }; ``

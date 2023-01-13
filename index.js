@@ -42,6 +42,7 @@ app.get("/getQuestion", async (req, res) => {
         return res.status(302).redirect("/")
     }
     var uList = await database.getAnswerList(uid)
+    console.log(uList)
     uList.forEach((element,index) => {
         uList[index] = element.qid
     });
@@ -92,7 +93,7 @@ app.get("/getSettings", async (req, res) => {
 });
 app.post("/postAnswer", async (req, res) => {
     var question = req.body;
-    database.logAnswer(question.qid,req.cookies.userId,question.acc)
+    database.logAnswer(question.hid,question.aiid,req.cookies.userId,question.acc)
     return res.status(200)
 });
 

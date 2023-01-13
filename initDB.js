@@ -33,7 +33,8 @@ const initDB = async function () {
     await run(`
     CREATE TABLE IF NOT EXISTS answers (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        qid INTEGER NOT NULL,
+        hid INTEGER NOT NULL,
+        aiid INTEGER NOT NULL,
         uid INTEGER NOT NULL,
         acc BOOL
     );
