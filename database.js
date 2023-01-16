@@ -1,14 +1,45 @@
-const sqlite = require('sqlite3');
-const path = require('path');
-const db = new sqlite.Database(path.resolve("./users.sqlite"));
+const mysql = require('mysql');
+require('dotenv').config()
+
+// Database Connection for Production
+
+// let config = {
+//     user: process.env.SQL_USER,
+//     database: process.env.SQL_DATABASE,
+//     password: process.env.SQL_PASSWORD,
+// }
+
+// if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
+//   config.socketPath = `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`;
+// }
+
+// let connection = mysql.createConnection(config);
+
+
+
+let connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    database: process.env.DB_DATABASE,
+    password: process.env.DB_PASS
+});
+connection.connect(function (err) {
+    if (err) {
+        console.error('Error connecting: ' + err.stack);
+        return;
+    }
+    console.log('Connected as thread id: ' + connection.threadId);
+});
 const run = (sql, params) => {
     return new Promise((resolve, reject) => {
-        db.all(sql, ...params, (err, rows) => {
-            if (err) {
-                return reject(err);
+        connection.query(
+            sql, params,
+            function (error, results, fields) {
+                if (error) throw error;
+                resolve(results);
             }
-            resolve(rows);
-        });
+        );
+
     });
 };
 const checkUser = async (uid) => {
@@ -20,7 +51,12 @@ const checkUser = async (uid) => {
     return check[0]
 }
 const newUser = async (uid, music, narration, age, experience, education, referer) => {
-
+    if(music == "on"){
+        music = true;
+    }
+    if(narration == "on"){
+        narration = true;
+    }
     var check = await run(`
         SELECT count(*) as count
         FROM users
@@ -67,16 +103,16 @@ const getScore = async (uid) => {
     WHERE uid = ?;
 `, [uid]);
         var right = 0;
-        for(var i = 0;i<answers.length;i++){
-            if(answers[i].acc === 1){
+        for (var i = 0; i < answers.length; i++) {
+            if (answers[i].acc === 1) {
                 right++
             }
         }
 
-        return [right,answers.length]
+        return [right, answers.length]
 
     }
-    
+
 };
 const getAnswerList = async (uid) => {
     if (uid != null) {

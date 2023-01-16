@@ -90,7 +90,7 @@ function intro() {
     if (settings.music) {
         introMusic.play()
     }
-    var introText = ["We live in a world full of information. Modern life is a constant stream of information, bombarding us with posts, messages, and articles. It is no surprise then, that information has been weaponized, used to subvert, mislead, divide and deceive. Powerful entities create false, misleading, or incomplete information to push a narrative that suits their interests. In order to influence foreign politics, the governments of multiple nations, including Russia, China, and Iran, have all sponsored far-reaching “disinformation” campaigns.", "Now, modern technology is poised to worsen this problem further. AI algorithms can be used to write convincing posts, either spreading false information, or simply arguing in favor of certain positions. However, AI-powered bots are hard to detect and could be used to mass produce artificial accounts and posts on a scale never seen before.", "However, although AI models have been trained to imitate humans, they are still fundamentally different. Given that, by some metrics, the best language generation model has only one hundredth the power of the human brain, it may be possible for people to learn to distinguish ai-generated political posts from human-written posts. To test this hypothesis, I made this experiment. You will be shown a series of pairs of posts. In each pair, one post is ai-generated, and one is a public tweet. Your task is to determine which one is ai-generated. Click those you think are ai-generated, and avoid those you think are real tweets. "];
+    var introText = ["We live in a world full of information. Modern life is a constant stream of information, bombarding us with posts, messages, and articles. It is no surprise then, that information has been weaponized, used to subvert, mislead, divide and deceive. Powerful entities create false, misleading, or incomplete information to push a narrative that suits their interests. In order to influence foreign politics, the governments of multiple nations, including Russia, China, and Iran, have all sponsored far-reaching “disinformation” campaigns.", "Now, modern technology is poised to worsen this problem further. Artificial Intelligence algorithms can be used to write convincing posts, either spreading false information, or simply arguing in favor of certain positions. AI-powered bots are hard to detect and could be used to mass-produce artificial accounts and posts on a scale never seen before.", "However, although AI models have been trained to imitate humans, they are still fundamentally different. Given that, by some metrics, the best language generation model has only one hundredth the power of the human brain, it may be possible for people to learn to distinguish AI-generated political posts from human-written posts. To test this hypothesis, I made this experiment. You will be shown a series of pairs of posts. In each pair, one post is AI-generated, and one is a public tweet. Your task is to determine which one is AI-generated. Click those you think are AI-generated, and avoid those you think are real tweets."]
     var split = introText[superIndex].split(" ")
     var maxLength = split.reduce((a, b) => { return Math.max(typeof a == "string" ? a.length : a, b.length) });
     var midBox = document.getElementById("mid-box")
@@ -237,6 +237,10 @@ async function surveyQuestion() {
     }
     var qJSON = await fetch('/getQuestion')
     var question = await qJSON.json()
+    if(question.end){
+        fadeToOutro();
+        return
+    }
     var side = Math.round(Math.random())
     aiBox = side ? document.getElementById("leftSurveyBox") : document.getElementById("rightSurveyBox")
     humanBox = side ? document.getElementById("rightSurveyBox") : document.getElementById("leftSurveyBox")
@@ -261,58 +265,63 @@ async function submit(acc, hid, aiid) {
 
     humanBox.setAttribute('onclick', "")
     aiBox.setAttribute('onclick', "")
+    if (!testing) {
+        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+        if (vw > 750) {
+            aiBg.style.animation = "fadeOut forwards 2s"
+            humanBg.style.animation = "fadeOut forwards 2s"
+            aiBox.style.backgroundColor = "rgb(0,0,0,0)"
+            humanBox.style.backgroundColor = "rgb(0,0,0,0)"
+            if (aiBox == document.getElementById("leftSurveyBox")) {
+                aiBox.style.backgroundImage = "linear-gradient(270deg, #af00005e, rgb(0,0,0,0))"
+                humanBox.style.backgroundImage = "linear-gradient(90deg, #06af005e, rgb(0,0,0,0))"
 
-    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
-    if (vw > 750) {
-        aiBg.style.animation = "fadeOut forwards 2s"
-        humanBg.style.animation = "fadeOut forwards 2s"
-        aiBox.style.backgroundColor = "rgb(0,0,0,0)"
-        humanBox.style.backgroundColor = "rgb(0,0,0,0)"
-        if (aiBox == document.getElementById("leftSurveyBox")) {
-            aiBox.style.backgroundImage = "linear-gradient(270deg, #af00005e, rgb(0,0,0,0))"
-            humanBox.style.backgroundImage = "linear-gradient(90deg, #06af005e, rgb(0,0,0,0))"
+            } else {
+                aiBox.style.backgroundImage = "linear-gradient(90deg, #af00005e, rgb(0,0,0,0))"
+                humanBox.style.backgroundImage = "linear-gradient(270deg, #06af005e, rgb(0,0,0,0))"
 
+            }
         } else {
-            aiBox.style.backgroundImage = "linear-gradient(90deg, #af00005e, rgb(0,0,0,0))"
-            humanBox.style.backgroundImage = "linear-gradient(270deg, #06af005e, rgb(0,0,0,0))"
+
+            aiBox.style.backgroundColor = "rgb(0,0,0,0)"
+            humanBox.style.backgroundColor = "rgb(0,0,0,0)"
+            if (aiBox == document.getElementById("leftSurveyBox")) {
+                aiBox.style.backgroundImage = "linear-gradient(0deg, #af00005e, rgb(0,0,0,0))"
+                humanBox.style.backgroundImage = "linear-gradient(180deg, #06af005e, rgb(0,0,0,0))"
+
+            } else {
+                aiBox.style.backgroundImage = "linear-gradient(180deg, #af00005e, rgb(0,0,0,0))"
+                humanBox.style.backgroundImage = "linear-gradient(0deg, #06af005e, rgb(0,0,0,0))"
+
+            }
 
         }
-    }else {
-
-        aiBox.style.backgroundColor = "rgb(0,0,0,0)"
-        humanBox.style.backgroundColor = "rgb(0,0,0,0)"
-        if (aiBox == document.getElementById("leftSurveyBox")) {
-            aiBox.style.backgroundImage = "linear-gradient(0deg, #af00005e, rgb(0,0,0,0))"
-            humanBox.style.backgroundImage = "linear-gradient(180deg, #06af005e, rgb(0,0,0,0))"
-
+        var message = document.createElement("h2")
+        message.id = "message"
+        if (acc) {
+            correct.play()
+            message.innerText = "Correct"
+            message.style.color = "#06af005e"
         } else {
-            aiBox.style.backgroundImage = "linear-gradient(180deg, #af00005e, rgb(0,0,0,0))"
-            humanBox.style.backgroundImage = "linear-gradient(0deg, #06af005e, rgb(0,0,0,0))"
+            incorrect.play()
+            message.innerText = "Incorrect"
+            message.style.color = "#af00005e"
 
         }
+        if (after) {
+            var scoreRaw = await fetch("/getScore")
+            var score = await scoreRaw.json();
+            var currentQACC = 0;
+            if (acc) {
+                currentQACC++;
+            }
+            message.innerText += " (Total accuracy: " + ((score[0] + currentQACC) / score[1] * 100).toFixed(2) + "%)"
+        }
+        body.appendChild(message)
+        await sleep(2000)
 
+        message.remove()
     }
-    var message = document.createElement("h2")
-    message.id = "message"
-    if (acc) {
-        correct.play()
-        message.innerText = "Correct"
-        message.style.color = "#06af005e"
-    } else {
-        incorrect.play()
-        message.innerText = "Incorrect"
-        message.style.color = "#af00005e"
-
-    }
-    if (after) {
-        var scoreRaw = await fetch("/getScore")
-        var score = await scoreRaw.json();
-        message.innerText += " (Total accuracy: " + (score[0] / score[1] * 100).toFixed(2) + "%)"
-    }
-    body.appendChild(message)
-    await sleep(2000)
-
-    message.remove()
     var xhr = new XMLHttpRequest();
     var url = "/postAnswer";
     xhr.open("POST", url, true);
@@ -379,28 +388,36 @@ function outroTransition() {
 }
 
 async function outro() {
-    var leftBox = document.getElementById("leftSurveyBox")
-    var rightBox = document.getElementById("rightSurveyBox")
-    var scoreRaw = await fetch("/getScore")
-    var score = await scoreRaw.json();
+    
+        var leftBox = document.getElementById("leftSurveyBox")
+        var rightBox = document.getElementById("rightSurveyBox")
+        var scoreRaw = await fetch("/getScore")
+        var score = await scoreRaw.json();
 
-    leftBox.remove()
-    rightBox.remove()
-    var midBox = document.createElement("div")
-    midBox.id = "mid-box"
-    var centerBox = document.createElement("div")
-    var outroText = document.createElement("p")
-    outroText.innerText = "Thank you for completing this test. If you wish to continue, you may do so as long as you wish. Or, you are also free to leave now."
-    centerBox.appendChild(outroText)
-    contButton = document.createElement("button")
-    contButton.innerText = "Continue"
-    contButton.setAttribute('onclick', "fadeToSurvey()")
-    after = true;
-    centerBox.appendChild(contButton)
-    scoreBox = document.createElement("p")
-    scoreBox.innerText = "Final Acurracy: " + score[0] + "/" + score[1]
-    centerBox.appendChild(scoreBox)
-    midBox.appendChild(centerBox)
-    document.body.appendChild(midBox)
-
+        leftBox.remove()
+        rightBox.remove()
+        var midBox = document.createElement("div")
+        midBox.id = "mid-box"
+        var centerBox = document.createElement("div")
+        var outroText = document.createElement("p")
+        if(!after){
+            outroText.innerText = "Thank you for completing this test. If you wish to continue, you may do so as long as you wish. Or, you are also free to leave now. A few notes: just because something was AI generated doesn't mean it's wrong, and just because something is human written doesn't mean its right. This survey was simply to test how realistic these AI generated posts were. Also, given that the \"Human\" posts were taken directly from twitter, there is no way to be sure that they were not AI-generated."
+            centerBox.appendChild(outroText)
+            contButton = document.createElement("button")
+            contButton.innerText = "Continue"
+            contButton.setAttribute('onclick', "fadeToSurvey()")
+            after = true;
+            centerBox.appendChild(contButton)
+        }else {
+            outroText.innerText = "You've reached the end of all the questions I generated. I'll probably try to make some more, so maybe come back sometime, but otherwise this is the end."
+            centerBox.appendChild(outroText)
+        }
+        
+        
+        scoreBox = document.createElement("p")
+        scoreBox.innerText = "Final Acurracy: " + score[0] + "/" + score[1]
+        centerBox.appendChild(scoreBox)
+        midBox.appendChild(centerBox)
+        document.body.appendChild(midBox)
+    
 }
