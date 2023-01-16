@@ -2,12 +2,14 @@ const queryString = window.location.search;
 const parameters = new URLSearchParams(queryString);
 const referer = parameters.get('referer');
 
-
+var testing = true;
 var after = false;
 var superIndex = 0;
 var qIndex = 0
 var introMusic = new Audio("music/sprachZarathustra.mp3");
 var mainMusic = new Audio("music/winterVivaldi.mp3");
+var afterMusic = new Audio("music/winterVivaldi.mp3");
+
 var outroMusic = new Audio("music/exenogenisisTheFatRat.mp3");
 var correct = new Audio("music/correct.mp3")
 var incorrect = new Audio("music/incorrect.mp3")
@@ -16,13 +18,13 @@ var settings
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-async function initSettings() {
-    if (getCookie("userId") != "") {
-        sJSON = await fetch('/getSettings')
+async function initSettings(i) {
+    if (getCookie("userId") != "" && i < 5) {
+        var sJSON = await fetch('/getSettings')
         settings = await sJSON.json()
-        if (settings.music == undefined) {
+        if (settings.music === undefined) {
             sleep(200)
-            initSettings()
+            initSettings(i + 1)
             return;
         }
         qIndex = settings.qIndex
@@ -38,10 +40,13 @@ async function initSettings() {
 
         settings = {}
     }
+    if (i >= 5) {
+        document.cookie = "userId" + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    }
 }
-initSettings()
+initSettings(0)
 
-var maxQs = 3
+var maxQs = 10
 
 function getCookie(cname) { // Source: https://www.w3schools.com/js/js_cookies.asp
     let name = cname + "=";
@@ -85,7 +90,7 @@ function intro() {
     if (settings.music) {
         introMusic.play()
     }
-    var introText = ["We live in a world full of information. Modern life is a constant stream of information, bombarding us with posts, messages, and articles. It is no surprise then, that information has been weaponized, used to subvert, mislead, divide and deceive. Powerful entities create false, misleading, or incomplete information to push a narrative that suits their interests. The governments of multiple nations, including Russia, China, and Iran, have all sponsored far-reaching “disinformation” campaigns.", " Now, modern technology is poised to worsen this problem further. AI algorithms can be used to write convincing deceptive text. However, these algorithms are still fundamentally different from humans: they are merely imitating us based on large quantities of data. Can you tell what was written by an AI and what was written by a human?"]
+    var introText = ["We live in a world full of information. Modern life is a constant stream of information, bombarding us with posts, messages, and articles. It is no surprise then, that information has been weaponized, used to subvert, mislead, divide and deceive. Powerful entities create false, misleading, or incomplete information to push a narrative that suits their interests. In order to influence foreign politics, the governments of multiple nations, including Russia, China, and Iran, have all sponsored far-reaching “disinformation” campaigns.", "Now, modern technology is poised to worsen this problem further. AI algorithms can be used to write convincing posts, either spreading false information, or simply arguing in favor of certain positions. However, AI-powered bots are hard to detect and could be used to mass produce artificial accounts and posts on a scale never seen before.", "However, although AI models have been trained to imitate humans, they are still fundamentally different. Given that, by some metrics, the best language generation model has only one hundredth the power of the human brain, it may be possible for people to learn to distinguish ai-generated political posts from human-written posts. To test this hypothesis, I made this experiment. You will be shown a series of pairs of posts. In each pair, one post is ai-generated, and one is a public tweet. Your task is to determine which one is ai-generated. Click those you think are ai-generated, and avoid those you think are real tweets. "];
     var split = introText[superIndex].split(" ")
     var maxLength = split.reduce((a, b) => { return Math.max(typeof a == "string" ? a.length : a, b.length) });
     var midBox = document.getElementById("mid-box")
@@ -113,10 +118,18 @@ function intro() {
     introTextBox.classList.add("introText");
     midBox.style.justifyContent = "center"
     alternateIntervals = {
-        ".": 1, // 500
-        ",": 1, // 100
+        ".": 500,
+        ",": 100,
     }
-    var baseInt = 1 // 50
+    var baseInt = 50
+    if (testing) {
+        alternateIntervals = {
+            ".": 1,
+            ",": 1,
+        }
+        var baseInt = 1
+
+    }
     var index = 0
     var letter = ""
     var currentLine = "█"
@@ -168,8 +181,12 @@ function intro() {
     }
 }
 function fadeToSurvey() {
-    if (settings.music) {
+    if (settings.music && !after) {
         audioVolumeOut(introMusic)
+
+    } else if (settings.music) {
+        audioVolumeOut(outroMusic)
+
     }
     var toFade = [document.getElementById("robotContainer"), document.getElementById("anonContainer"), ...(document.querySelectorAll("#mid-box *"))]
     fadeLength = 4;
@@ -180,9 +197,11 @@ function fadeToSurvey() {
 
 }
 function surveyTransition() {
-    if (settings.music) {
+    if (settings.music && !after) {
 
         mainMusic.play()
+    } else if (settings.music) {
+        afterMusic.play()
     }
     var midBox = document.getElementById("mid-box")
     midBox.innerHTML = ""
@@ -230,31 +249,49 @@ async function surveyQuestion() {
     humanBg.src = 'images/anomymous.png'
     humanBg.classList.add('surveyFeedbackBgImage')
 
-    aiBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.aiText
-    humanBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.text
-    humanBox.setAttribute('onclick', "submit(false," + question.qid + ")")
-    aiBox.setAttribute('onclick', "submit(true," + question.qid + ")")
+    aiBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.aiPost
+    humanBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.humanPost
+    humanBox.setAttribute('onclick', "submit(false," + question.hid + "," + question.aiid + ")")
+    aiBox.setAttribute('onclick', "submit(true," + question.hid + "," + question.aiid + ")")
     aiBox.appendChild(aiBg)
     humanBox.appendChild(humanBg)
 
 }
-async function submit(acc, qid) {
+async function submit(acc, hid, aiid) {
+
     humanBox.setAttribute('onclick', "")
     aiBox.setAttribute('onclick', "")
-    aiBg.style.animation = "fadeOut forwards 2s"
-    humanBg.style.animation = "fadeOut forwards 2s"
-    aiBox.style.backgroundColor = "rgb(0,0,0,0)"
-    humanBox.style.backgroundColor = "rgb(0,0,0,0)"
-    if (aiBox == document.getElementById("leftSurveyBox")) {
-        aiBox.style.backgroundImage = "linear-gradient(270deg, #af00005e, rgb(0,0,0,0))"
-        humanBox.style.backgroundImage = "linear-gradient(90deg, #06af005e, rgb(0,0,0,0))"
 
-    } else {
-        aiBox.style.backgroundImage = "linear-gradient(90deg, #af00005e, rgb(0,0,0,0))"
-        humanBox.style.backgroundImage = "linear-gradient(270deg, #06af005e, rgb(0,0,0,0))"
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+    if (vw > 750) {
+        aiBg.style.animation = "fadeOut forwards 2s"
+        humanBg.style.animation = "fadeOut forwards 2s"
+        aiBox.style.backgroundColor = "rgb(0,0,0,0)"
+        humanBox.style.backgroundColor = "rgb(0,0,0,0)"
+        if (aiBox == document.getElementById("leftSurveyBox")) {
+            aiBox.style.backgroundImage = "linear-gradient(270deg, #af00005e, rgb(0,0,0,0))"
+            humanBox.style.backgroundImage = "linear-gradient(90deg, #06af005e, rgb(0,0,0,0))"
+
+        } else {
+            aiBox.style.backgroundImage = "linear-gradient(90deg, #af00005e, rgb(0,0,0,0))"
+            humanBox.style.backgroundImage = "linear-gradient(270deg, #06af005e, rgb(0,0,0,0))"
+
+        }
+    }else {
+
+        aiBox.style.backgroundColor = "rgb(0,0,0,0)"
+        humanBox.style.backgroundColor = "rgb(0,0,0,0)"
+        if (aiBox == document.getElementById("leftSurveyBox")) {
+            aiBox.style.backgroundImage = "linear-gradient(0deg, #af00005e, rgb(0,0,0,0))"
+            humanBox.style.backgroundImage = "linear-gradient(180deg, #06af005e, rgb(0,0,0,0))"
+
+        } else {
+            aiBox.style.backgroundImage = "linear-gradient(180deg, #af00005e, rgb(0,0,0,0))"
+            humanBox.style.backgroundImage = "linear-gradient(0deg, #06af005e, rgb(0,0,0,0))"
+
+        }
 
     }
-
     var message = document.createElement("h2")
     message.id = "message"
     if (acc) {
@@ -267,6 +304,11 @@ async function submit(acc, qid) {
         message.style.color = "#af00005e"
 
     }
+    if (after) {
+        var scoreRaw = await fetch("/getScore")
+        var score = await scoreRaw.json();
+        message.innerText += " (Total accuracy: " + (score[0] / score[1] * 100).toFixed(2) + "%)"
+    }
     body.appendChild(message)
     await sleep(2000)
 
@@ -275,10 +317,10 @@ async function submit(acc, qid) {
     var url = "/postAnswer";
     xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-Type", "application/json");
-    var data = JSON.stringify({ acc: acc, qid: qid });
+    var data = JSON.stringify({ acc: acc, hid: hid, aiid: aiid });
     xhr.send(data);
 
-    if (qIndex < maxQs || after) {
+    if (qIndex < maxQs - 1 || after) {
         qIndex++;
 
 
@@ -336,21 +378,29 @@ function outroTransition() {
     */
 }
 
-function outro() {
+async function outro() {
     var leftBox = document.getElementById("leftSurveyBox")
     var rightBox = document.getElementById("rightSurveyBox")
+    var scoreRaw = await fetch("/getScore")
+    var score = await scoreRaw.json();
+
     leftBox.remove()
     rightBox.remove()
     var midBox = document.createElement("div")
     midBox.id = "mid-box"
+    var centerBox = document.createElement("div")
     var outroText = document.createElement("p")
     outroText.innerText = "Thank you for completing this test. If you wish to continue, you may do so as long as you wish. Or, you are also free to leave now."
-    midBox.appendChild(outroText)
+    centerBox.appendChild(outroText)
     contButton = document.createElement("button")
     contButton.innerText = "Continue"
     contButton.setAttribute('onclick', "fadeToSurvey()")
     after = true;
-    midBox.appendChild(contButton)
+    centerBox.appendChild(contButton)
+    scoreBox = document.createElement("p")
+    scoreBox.innerText = "Final Acurracy: " + score[0] + "/" + score[1]
+    centerBox.appendChild(scoreBox)
+    midBox.appendChild(centerBox)
     document.body.appendChild(midBox)
 
 }

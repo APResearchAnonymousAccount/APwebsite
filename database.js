@@ -46,6 +46,7 @@ const logAnswer = async (hid, aiid, uid, acc) => {
         INSERT INTO answers (hid,aiid, uid, acc) VALUES (?,?,?,?)
 
     `, [hid, aiid, uid, acc]);
+    return
 };
 const getSettings = async (uid) => {
     if (uid != null) {
@@ -58,10 +59,29 @@ const getSettings = async (uid) => {
 
     }
 };
+const getScore = async (uid) => {
+    if (uid != null) {
+        var answers = await run(`
+    SELECT acc
+    FROM answers
+    WHERE uid = ?;
+`, [uid]);
+        var right = 0;
+        for(var i = 0;i<answers.length;i++){
+            if(answers[i].acc === 1){
+                right++
+            }
+        }
+
+        return [right,answers.length]
+
+    }
+    
+};
 const getAnswerList = async (uid) => {
     if (uid != null) {
         var answers = await run(`
-    SELECT hid, aiid
+    SELECT hid,aiid
     FROM answers
     WHERE uid = ?;
 `, [uid]);
@@ -69,4 +89,4 @@ const getAnswerList = async (uid) => {
 
     }
 };
-module.exports = { newUser, logAnswer, getSettings, getAnswerList, checkUser }; ``
+module.exports = { newUser, logAnswer, getSettings, getAnswerList, checkUser, getScore }; ``

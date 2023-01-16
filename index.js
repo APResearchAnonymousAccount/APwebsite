@@ -5,7 +5,9 @@ const path = require("path");
 const { randomBytes } = require("crypto");
 const app = express();
 const database = require('./database.js')
-const question_list = require("./generated-top10.json")
+const humanList = require("./human.json")
+const aiList = require("./ai.json")
+
 const { 
     v1: uuidv1,
     v4: uuidv4,
@@ -41,31 +43,85 @@ app.get("/getQuestion", async (req, res) => {
     if(uid == undefined){
         return res.status(302).redirect("/")
     }
+    console.log("st")
     var uList = await database.getAnswerList(uid)
     console.log(uList)
+    var uListHuman = []
+    var uListAI = []
+
     uList.forEach((element,index) => {
-        uList[index] = element.qid
+        uListHuman.push(element.hid)
+        uListAI.push(element.aiid)
     });
-    var qid = Math.floor(Math.random() * question_list.length)
-    if(uList.length == question_list.length){
+    if(uList.length == humanList.length || uList.length == aiList.length ){
         return res.status(301).redirect('/end.html')
     }
+    var hid = Math.floor(Math.random() * humanList.length)
+    var aiid = Math.floor(Math.random() * aiList.length)
+    
     var i = 0;
-    while(uList.includes(qid) == true){
+    var reversePair = false;
+    for(var i = 0; i < uListAI.length;i++){
+        if(hid == aiList[i][1]){
+            reversePair = true;
+        }
+    }
+
+    while(uListHuman.includes(hid) == true || reversePair){
         i++
-        qid++
-        qid = qid % question_list.length
-        if(i > question_list.length){
+        hid++
+        hid = hid % humanList.length
+        if(i > humanList.length){
             console.log("bad")
             break;
             
 
         }
+        reversePair = false;
+        for(var i = 0; i < uListAI.length;i++){
+            if(hid == aiList[i][1]){
+                reversePair = true;
+            }
+        }
     }
-    var question = question_list[qid]
-    question.qid = qid;
+    var siblingPair = false;
+    console.log(aiid)
+    while(uListAI.includes(aiid) == true || uListHuman.includes(aiList[aiid][1] || siblingPair)){
+        i++
+        aiid++
+        aiid = hid % humanList.length
+        if(i > aiList.length){
+            console.log("bad")
+            break;
+            
+
+        }
+        for(var i = 0; i < uListAI.length;i++){
+            if(aiid == aiList[i][1]){
+                siblingPair = true;
+            }
+        }
+    }
+    var question = {
+        title: "",
+        humanPost: humanList[hid],
+        aiPost: aiList[aiid][0],
+        hid: hid,
+        aiid: aiid
+
+    }
 
     return res.json(question)
+
+});
+app.get("/getScore", async (req, res) => {
+    var uid = req.cookies.userId
+    if(uid == undefined){
+        return res.status(302).redirect("/")
+    }
+    score = await database.getScore(uid);
+    console.log(score)
+    return res.status(200).json(score);
 
 });
 app.get("/getSettings", async (req, res) => {
@@ -94,7 +150,9 @@ app.get("/getSettings", async (req, res) => {
 app.post("/postAnswer", async (req, res) => {
     var question = req.body;
     database.logAnswer(question.hid,question.aiid,req.cookies.userId,question.acc)
-    return res.status(200)
+    res.sendStatus(200) 
+    res.end()
+    return 
 });
 
 /*app.get("/survey", async (req, res) => {
