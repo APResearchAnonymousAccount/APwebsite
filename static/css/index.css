@@ -94,12 +94,13 @@ h1 {
 
 form {
     display: flex;
-    vertical-align: middle;
+    margin: auto;
 }
 
 .question {
     text-align: left;
-    font-size: 1rem;
+    font-size: 1.5vw;
+    
     padding: 1vh 1%;
 }
 
@@ -107,7 +108,7 @@ option,
 select {
     padding: 1% 2%;
     border: none;
-    font-size: 20px;
+    font-size: 1.8vw;
     background-color: #000;
     color: white;
     text-align: center;
@@ -115,7 +116,7 @@ select {
 }
 
 label {
-    text-align: left;
+    text-align: center;
     margin-right: 2%;
 }
 
@@ -198,12 +199,42 @@ img {
     }
 }
 
+#message {
+    position: fixed;
+    animation: 2s linear slide-across-from-right forwards;
+    transform: translate(-100%, 75vh);
+    text-align: center;
+    font-size: xx-large;
+    font-family: "Red Hat Mono", monospace;
+    
+}
+
+@keyframes slide-across-from-right {
+    0% {
+        transform: translate(-100%, 75vh)
+    }
+
+    25% {
+        transform: translate(calc(50vw - 50%), 75vh)
+    }
+
+    75% {
+        transform: translate(calc(50vw - 50%), 75vh)
+    }
+
+    100% {
+        transform: translate(100vw, 75vh)
+    }
+}
+
 #leftSurveyBox {
     animation: slideLeft 4s forwards
 }
+
 #rightSurveyBox {
     animation: slideRight 4s forwards
 }
+
 @keyframes slideLeft {
     0% {
         left: 50%;
@@ -213,6 +244,7 @@ img {
         left: 75%;
     }
 }
+
 @keyframes slideRight {
     0% {
         left: 50%;
@@ -222,11 +254,130 @@ img {
         left: 25%;
     }
 }
+
+@keyframes slideBackFromLeft {
+    0% {
+        left: 75%;
+    }
+
+    100% {
+        left: 50%;
+    }
+}
+
+@keyframes slideBackFromRight {
+    0% {
+        left: 25%;
+    }
+
+    100% {
+        left: 50%;
+    }
+}
+
 .survey-box {
     display: block;
+
+
 }
+
 .survey-box:hover {
     display: block;
     background-color: rgb(20, 34, 48);
 
+}
+
+.surveyFeedbackBgImage {
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    height: auto;
+    position: absolute;
+
+}
+
+@media screen and (max-width: 750px){
+    #robotContainer {
+        display: none;
+    }
+    #anonContainer {
+        display: none;
+    }
+    #mid-box {
+
+        width: 96%;
+        height:100%;
+    }
+    form {
+        padding:5%;
+    }
+    .question {
+        font-size: 4vw;
+    }
+    option, select {
+        font-size:4vw;
+    }
+    @keyframes slideLeft {
+        0% {
+            top: 50%;
+        }
+    
+        100% {
+            top: 75%;
+        }
+    }
+    
+    @keyframes slideRight {
+        0% {
+            top: 50%;
+        }
+    
+        100% {
+            top: 25%;
+        }
+    }
+    
+    @keyframes slideBackFromLeft {
+        0% {
+            top: 75%;
+        }
+    
+        100% {
+            top: 50%;
+        }
+    }
+    
+    @keyframes slideBackFromRight {
+        0% {
+            top: 25%;
+        }
+    
+        100% {
+            top: 50%;
+        }
+    }
+    .survey-box {
+        width: 80%;
+        height: 32%;
+    }
+    @keyframes slide-across-from-right {
+        0% {
+            transform: translate(-100%, calc(50vh - 110%))
+        }
+    
+        25% {
+            transform: translate(calc(50vw - 50%), calc(50vh - 110%))
+        }
+    
+        75% {
+            transform: translate(calc(50vw - 50%), calc(50vh - 110%))
+        }
+    
+        100% {
+            transform: translate(100vw, calc(50vh - 110%))
+        }
+
+    }
+    
 }
