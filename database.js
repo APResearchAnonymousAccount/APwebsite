@@ -3,26 +3,19 @@ require('dotenv').config()
 
 // Database Connection for Production
 
-// let config = {
-//     user: process.env.SQL_USER,
-//     database: process.env.SQL_DATABASE,
-//     password: process.env.SQL_PASSWORD,
-// }
-
-// if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
-//   config.socketPath = `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`;
-// }
-
-// let connection = mysql.createConnection(config);
-
-
-
-let connection = mysql.createConnection({
-    host: process.env.DB_HOST,
+let config = {
     user: process.env.DB_USER,
     database: process.env.DB_DATABASE,
-    password: process.env.DB_PASS
-});
+    password: process.env.DB_PASS,
+}
+if (process.env.INSTANCE_CONNECTION_NAME) {
+    config.socketPath = `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`;
+}
+
+let connection = mysql.createConnection(config);
+
+
+
 connection.connect(function (err) {
     if (err) {
         console.error('Error connecting: ' + err.stack);
@@ -51,10 +44,10 @@ const checkUser = async (uid) => {
     return check[0]
 }
 const newUser = async (uid, music, narration, age, experience, education, referer) => {
-    if(music == "on"){
+    if (music == "on") {
         music = true;
     }
-    if(narration == "on"){
+    if (narration == "on") {
         narration = true;
     }
     var check = await run(`
