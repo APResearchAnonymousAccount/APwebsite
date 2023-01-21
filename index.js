@@ -72,6 +72,8 @@ app.get("/getQuestion", async (req, res) => {
     }
     if (aiList[aiid][1] != "o") {
         for (var j = 0; j < uListAI.length; j++) {
+            console.log(uListAI[j])
+
             if (aiList[aiid][1] == aiList[uListAI[j]][1]) {
                 siblingPair = true;
             }

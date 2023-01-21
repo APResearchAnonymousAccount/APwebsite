@@ -1,24 +1,58 @@
 const queryString = window.location.search;
 const parameters = new URLSearchParams(queryString);
-const referer = parameters.get('referer');
+const referer = parameters.get('referrer');
+const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
 
 var testing = false;
 var after = false;
 var superIndex = 0;
-var qPreload = null;
-
 var qIndex = 0
 var introMusic = new Audio("music/sprachZarathustra.mp3");
 var mainMusic = new Audio("music/winterVivaldi.mp3");
 var afterMusic = new Audio("music/winterVivaldi.mp3");
-
 var outroMusic = new Audio("music/exenogenisisTheFatRat.mp3");
 var correct = new Audio("music/correct.mp3")
 var incorrect = new Audio("music/incorrect.mp3")
+var qPreload = null
 
+var instruc = null;
 var settings
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+
+function fitText(outputSelector) {
+    // max font size in pixels
+    const maxFontSize = 50;
+    // get the DOM output element by its selector
+    let outputDiv = document.getElementById(outputSelector);
+    // get element's width
+    let width = outputDiv.clientWidth;
+    // get content's width
+    let contentWidth = outputDiv.scrollWidth;
+    // get fontSize
+    let fontSize = parseInt(window.getComputedStyle(outputDiv, null).getPropertyValue('font-size'), 10);
+    // if content's width is bigger then elements width - overflow
+    if (contentWidth > width) {
+        fontSize = Math.ceil(fontSize * width / contentWidth, 10);
+        fontSize = fontSize > maxFontSize ? fontSize = maxFontSize : fontSize - 1;
+        outputDiv.style.fontSize = fontSize + 'px';
+    } else {
+        // content is smaller then width... let's resize in 1 px until it fits 
+        while (contentWidth === width && fontSize < maxFontSize) {
+            fontSize = Math.ceil(fontSize) + 1;
+            fontSize = fontSize > maxFontSize ? fontSize = maxFontSize : fontSize;
+            outputDiv.style.fontSize = fontSize + 'px';
+            // update widths
+            width = outputDiv.clientWidth;
+            contentWidth = outputDiv.scrollWidth;
+            if (contentWidth > width) {
+                outputDiv.style.fontSize = fontSize - 1 + 'px';
+            }
+        }
+    }
 }
 async function initSettings(i) {
     if (getCookie("userId") != "" && i < 5) {
@@ -85,7 +119,6 @@ function audioVolumeOut(q) {   // Source: https://stackoverflow.com/questions/74
 };
 
 function intro() {
-
     if (superIndex == 0) {
         settings.music = document.getElementsByName("musicSwitch")[0].checked
         settings.narration = document.getElementsByName("narrationSwitch")[0].checked
@@ -124,7 +157,7 @@ function intro() {
         ".": 500,
         ",": 100,
     }
-    var baseInt = 50
+    var baseInt = 20
     if (testing) {
         alternateIntervals = {
             ".": 1,
@@ -138,9 +171,8 @@ function intro() {
     var currentLine = "█"
     var wordIndex = 0;
     function nextLetter(timestamp, startTime) {
-        if(qPreload === null && getCookie("userId") != ""){
-            qPreload = fetch('/getQuestion?hid=n&aiid=n')
-
+        if(qPreload === null && getCookie("userId") === ""){
+            qPreload = fetch("/getQuestion?aiid=n&hid=n")
         }
         var runtime = timestamp - startTime
         letter = introText[superIndex][index]
@@ -226,6 +258,7 @@ function surveyTransition() {
     body.appendChild(leftBox)
     body.appendChild(rightBox)
     midBox.remove();
+
     setTimeout(surveyQuestion, 4 * 1000)
 
 
@@ -235,25 +268,43 @@ var humanBg
 var aiBox
 var humanBox
 async function surveyQuestion() {
+    if (instruc === null) {
+
+        instruc = document.createElement("h2")
+        instruc.id = "instruction"
+        if (vw < 750) {
+            instruc.innerText = "Click the AI-Generated Post"
+            instruc.style.margin = "0.5vh"
+            instruc.style.fontSize = "7vw"
+        } else {
+            instruc.innerHTML = "Click<br>the AI-<br>Generated<br>Post"
+            instruc.style.fontSize = "2vw"
+            instruc.style.position = "fixed"
+            instruc.style.transform = "translate(calc(50vw - 50%), calc(50vh - 50%))"
+
+        }
+        body.appendChild(instruc);
+    }
     if (aiBg != undefined) {
         aiBg.remove()
         humanBg.remove()
         aiBox.style.backgroundImage = "none"
         humanBox.style.backgroundImage = "none"
 
-    }
+    }  
     if(qPreload === null){
-        qPreload = fetch('/getQuestion?hid=n&aiid=n')
+        qPreload = fetch("/getQuestion?aiid=n&hid=n")
 
     }
     var qJSON = await qPreload
-    
     var question = await qJSON.json()
-    if(question.end){
+
+
+    if (question.end) {
         fadeToOutro();
         return
     }
-    qPreload = fetch('/getQuestion?hid='+question.hid+'&aiid='+question.aiid)
+    qPreload = fetch("/getQuestion?aiid="+question.aiid+"&hid="+question.hid)
 
     var side = Math.round(Math.random())
     aiBox = side ? document.getElementById("leftSurveyBox") : document.getElementById("rightSurveyBox")
@@ -266,21 +317,22 @@ async function surveyQuestion() {
     aiBg.src = 'images/robot.png'
     humanBg.src = 'images/anomymous.png'
     humanBg.classList.add('surveyFeedbackBgImage')
-
+    
     aiBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.aiPost
     humanBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.humanPost
+    fitText("leftSurveyBox")
+    fitText("rightSurveyBox")
     humanBox.setAttribute('onclick', "submit(false," + question.hid + "," + question.aiid + ")")
     aiBox.setAttribute('onclick', "submit(true," + question.hid + "," + question.aiid + ")")
+    
     aiBox.appendChild(aiBg)
     humanBox.appendChild(humanBg)
-
 }
 async function submit(acc, hid, aiid) {
-    
+
     humanBox.setAttribute('onclick', "")
     aiBox.setAttribute('onclick', "")
     if (!testing) {
-        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
         if (vw > 750) {
             aiBg.style.animation = "fadeOut forwards 2s"
             humanBg.style.animation = "fadeOut forwards 2s"
@@ -402,36 +454,36 @@ function outroTransition() {
 }
 
 async function outro() {
-    
-        var leftBox = document.getElementById("leftSurveyBox")
-        var rightBox = document.getElementById("rightSurveyBox")
-        var scoreRaw = await fetch("/getScore")
-        var score = await scoreRaw.json();
 
-        leftBox.remove()
-        rightBox.remove()
-        var midBox = document.createElement("div")
-        midBox.id = "mid-box"
-        var centerBox = document.createElement("div")
-        var outroText = document.createElement("p")
-        if(!after){
-            outroText.innerText = "Thank you for completing this test. If you wish to continue, you may do so as long as you wish. Or, you are also free to leave now. A few notes: just because something was AI generated doesn't mean it's wrong, and just because something is human written doesn't mean its right. This survey was simply to test how realistic these AI generated posts were. Also, given that the \"Human\" posts were taken directly from twitter, there is no way to be sure that they were not AI-generated."
-            centerBox.appendChild(outroText)
-            contButton = document.createElement("button")
-            contButton.innerText = "Continue"
-            contButton.setAttribute('onclick', "fadeToSurvey()")
-            after = true;
-            centerBox.appendChild(contButton)
-        }else {
-            outroText.innerText = "You've reached the end of all the questions I generated. I'll probably try to make some more, so maybe come back sometime, but otherwise this is the end."
-            centerBox.appendChild(outroText)
-        }
-        
-        
-        scoreBox = document.createElement("p")
-        scoreBox.innerText = "Final Acurracy: " + score[0] + "/" + score[1]
-        centerBox.appendChild(scoreBox)
-        midBox.appendChild(centerBox)
-        document.body.appendChild(midBox)
-    
+    var leftBox = document.getElementById("leftSurveyBox")
+    var rightBox = document.getElementById("rightSurveyBox")
+    var scoreRaw = await fetch("/getScore")
+    var score = await scoreRaw.json();
+
+    leftBox.remove()
+    rightBox.remove()
+    var midBox = document.createElement("div")
+    midBox.id = "mid-box"
+    var centerBox = document.createElement("div")
+    var outroText = document.createElement("p")
+    if (!after) {
+        outroText.innerText = "Thank you for completing this test. If you wish to continue, you may do so as long as you wish. Or, you are also free to leave now. A few notes: just because something was AI generated doesn't mean it's wrong, and just because something is human written doesn't mean its right. This survey was simply to test how realistic these AI generated posts were. Also, given that the \"Human\" posts were taken directly from twitter, there is no way to be sure that they were not AI-generated."
+        centerBox.appendChild(outroText)
+        contButton = document.createElement("button")
+        contButton.innerText = "Continue"
+        contButton.setAttribute('onclick', "fadeToSurvey()")
+        after = true;
+        centerBox.appendChild(contButton)
+    } else {
+        outroText.innerText = "You've reached the end of all the questions I generated. I'll probably try to make some more, so maybe come back sometime, but otherwise this is the end."
+        centerBox.appendChild(outroText)
+    }
+
+
+    scoreBox = document.createElement("p")
+    scoreBox.innerText = "Final Acurracy: " + score[0] + "/" + score[1]
+    centerBox.appendChild(scoreBox)
+    midBox.appendChild(centerBox)
+    document.body.appendChild(midBox)
+
 }
