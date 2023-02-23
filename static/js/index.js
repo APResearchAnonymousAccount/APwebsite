@@ -5,6 +5,8 @@ const referer = parameters.get('referer');
 var testing = true;
 var after = false;
 var superIndex = 0;
+var qPreload = null;
+
 var qIndex = 0
 var introMusic = new Audio("music/sprachZarathustra.mp3");
 var mainMusic = new Audio("music/winterVivaldi.mp3");
@@ -83,6 +85,7 @@ function audioVolumeOut(q) {   // Source: https://stackoverflow.com/questions/74
 };
 
 function intro() {
+
     if (superIndex == 0) {
         settings.music = document.getElementsByName("musicSwitch")[0].checked
         settings.narration = document.getElementsByName("narrationSwitch")[0].checked
@@ -135,6 +138,10 @@ function intro() {
     var currentLine = "█"
     var wordIndex = 0;
     function nextLetter(timestamp, startTime) {
+        if(qPreload === null && getCookie("userId") != ""){
+            qPreload = fetch('/getQuestion?hid=n&aiid=n')
+
+        }
         var runtime = timestamp - startTime
         letter = introText[superIndex][index]
         inverval = letter in alternateIntervals ? alternateIntervals[letter] : baseInt
@@ -235,12 +242,19 @@ async function surveyQuestion() {
         humanBox.style.backgroundImage = "none"
 
     }
-    var qJSON = await fetch('/getQuestion')
+    if(qPreload === null){
+        qPreload = fetch('/getQuestion?hid=n&aiid=n')
+
+    }
+    var qJSON = await qPreload
+    
     var question = await qJSON.json()
     if(question.end){
         fadeToOutro();
         return
     }
+    qPreload = fetch('/getQuestion?hid='+question.hid+'&aiid='+question.aiid)
+
     var side = Math.round(Math.random())
     aiBox = side ? document.getElementById("leftSurveyBox") : document.getElementById("rightSurveyBox")
     humanBox = side ? document.getElementById("rightSurveyBox") : document.getElementById("leftSurveyBox")
@@ -262,7 +276,7 @@ async function surveyQuestion() {
 
 }
 async function submit(acc, hid, aiid) {
-
+    
     humanBox.setAttribute('onclick', "")
     aiBox.setAttribute('onclick', "")
     if (!testing) {
