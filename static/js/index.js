@@ -6,7 +6,7 @@ var testing = true;
 var after = false;
 var superIndex = 0;
 var qPreload = null;
-
+var tryPlay = false;
 var qIndex = 0
 var introMusic = new Audio("music/sprachZarathustra.mp3");
 var mainMusic = new Audio("music/winterVivaldi.mp3");
@@ -206,7 +206,7 @@ function fadeToSurvey() {
 function surveyTransition() {
     if (settings.music && !after) {
 
-        mainMusic.play()
+        mainMusic.play().catch((error) => { tryPlay = true;})
     } else if (settings.music) {
         afterMusic.play()
     }
@@ -276,7 +276,10 @@ async function surveyQuestion() {
 
 }
 async function submit(acc, hid, aiid) {
-    
+    if(tryPlay){
+        mainMusic.play()
+        tryPlay = false;
+    }
     humanBox.setAttribute('onclick', "")
     aiBox.setAttribute('onclick', "")
     if (!testing) {

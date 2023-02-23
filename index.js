@@ -5,8 +5,16 @@ const path = require("path");
 const { randomBytes } = require("crypto");
 const app = express();
 const database = require('./database.js')
-const humanList = require("./human.json")
-const aiList = require("./ai.json")
+
+var ira = true;
+if(ira){
+    const humanList = require("./human.json")
+    const aiList = require("./ai.json")
+}else{
+
+}
+
+
 
 const {
     v1: uuidv1,
@@ -65,13 +73,15 @@ app.get("/getQuestion", async (req, res) => {
 
     var i = 0;
     var reversePair = false;
+    var siblingPair = false;
     for (var j = 0; j < uListAI.length; j++) {
         if (hid == aiList[j][1]) {
             reversePair = true;
         }
     }
-    if (aiList[aiid][1] != "o") {
+    if (aiList[aiid][1] != "o" && aiList[aiid][1] != "c" && aiList[aiid][1] != "d" && aiList[aiid][1] != "c2" && aiList[aiid][1] != "d2") {
         for (var j = 0; j < uListAI.length; j++) {
+
             if (aiList[aiid][1] == aiList[uListAI[j]][1]) {
                 siblingPair = true;
             }
@@ -97,8 +107,9 @@ app.get("/getQuestion", async (req, res) => {
         }
     }
     i = 0;
-    var siblingPair = false;
-    while (uListAI.includes(aiid) == true || uListHuman.includes(aiList[aiid][1] || siblingPair)) {
+    console.log(uListAI+' | '+aiid)
+    console.log( uListAI.includes(aiid) == true)
+    while (aiList[i][1] == hid || uListAI.includes(aiid) == true || uListHuman.includes(aiList[aiid][1]) || siblingPair) {
         i++
         aiid++
         aiid = aiid % aiList.length
@@ -110,7 +121,7 @@ app.get("/getQuestion", async (req, res) => {
 
         }
         siblingPair = false
-        if (aiList[aiid][1] != "o") {
+        if (aiList[aiid][1] != "o" && aiList[aiid][1] != "c" && aiList[aiid][1] != "d" && aiList[aiid][1] != "c2" && aiList[aiid][1] != "d2") {
             for (var j = 0; j < uListAI.length; j++) {
                 if (aiList[aiid][1] == aiList[uListAI[j]][1]) {
                     siblingPair = true;
@@ -194,7 +205,7 @@ app.post("/postAnswer", async (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'static')));
 
-app.listen(8080);
+app.listen(4000);
 process.on("unhandledRejection", (error) => {
     throw error;
 });
