@@ -1,3 +1,8 @@
 gitToken
 apiToken
 .env
+bin
+venv
+node_modules
+lib
+share

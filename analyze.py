@@ -3,8 +3,7 @@ import matplotlib.pyplot as plt
 import sqlite3
 import os
 import math
-from dotenv import load_dotenv
-load_dotenv()
+
 ages = ["<14","14-18","19-22","23-29","30-39","40-49","50-59","60-69"," 70-79","80+"]
 colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000']
 
@@ -12,17 +11,23 @@ with open('ai.json', 'r') as f:
     aiList = json.loads(f.read())
 with open('human.json', 'r') as f:
     humanList = json.loads(f.read())
+with open('aiIRA.json','r') as f:
+    aiListira = json.loads(f.read())
+with open('humanIRA.json','r') as f:
+    humanListira = json.loads(f.read())
+
+
 
 sql_query = """SELECT name FROM sqlite_master
     WHERE type='table';"""
 mydb = sqlite3.connect(
-    '/home/oliver/Documents/school/research/website/newtest/apdb.sqlite')
+    '/home/oliver/Documents/school/research/APwebsite/apdb.sqlite')
 cursor = mydb.cursor()
 
 
-analysisIndex = 1
+analysisIndex = 0
 
-analysisTypes = ["changeOverTime","changeOverTimeAverage","intervalAverageTime","changeOverTimevsAge", "aiGenType",
+analysisTypes = ["changeOverTime","changeOverTimeAverage","intervalAverageTime","changeOverTimevsAge", "aiGenType","aiGenTypeIRA",
                  "aiTextLengthScatter", "aiTextLengthPlot","participationHistogram","scatterPlotAge"]
 
 analysisType = analysisTypes[analysisIndex]
@@ -30,20 +35,35 @@ analysisType = analysisTypes[analysisIndex]
 
 
 
-#cursor.execute("SELECT answers.id,users.referer, users.uid, users.age, users.experience, users.education, answers.hid, answers.aiid, answers.acc FROM answers INNER JOIN users ON users.uid = answers.uid WHERE users.referer != 'test' ORDER BY answers.id")
-
+cursor.execute("SELECT answers.id,users.referer, users.uid, users.age, users.experience, users.education, answers.hid, answers.aiid, answers.acc FROM answers INNER JOIN users ON users.uid = answers.uid WHERE users.referer != 'test' ORDER BY answers.id")
+baseTweets = cursor.fetchall()
 #stuff = cursor.fetchall()
 cursor.execute("SELECT answersIRA.id,users.referer, users.uid, users.age, users.experience, users.education, answersIRA.hid, answersIRA.aiid, answersIRA.acc FROM answersIRA INNER JOIN users ON users.uid = answersIRA.uid WHERE users.referer != 'test' ORDER BY answersIRA.id")
+
+iraTweets = cursor.fetchall()
+
 #stuff.extend(cursor.fetchall())
 
-stuff = cursor.fetchall()
+stuff = iraTweets.copy()
+
+stuff.extend(baseTweets)
+
+
 
 
 answers = []
 users = {}
+answersIra = []
+usersIra = {}
+answersBase = []
+usersBase = {}
+
+
 maxQ = 0
 # Processing
 for (ansid, referer, uid, age, experience,education, hid, aiid, acc) in stuff:
+
+
     answer = {
         'hid': hid,
         "aiid": aiid,
@@ -65,6 +85,61 @@ for (ansid, referer, uid, age, experience,education, hid, aiid, acc) in stuff:
             }
     if (len(users[uid]['answers']) > maxQ):
         maxQ = len(users[uid]['answers'])
+
+for (ansid, referer, uid, age, experience,education, hid, aiid, acc) in iraTweets:
+
+
+    answer = {
+        'hid': hid,
+        "aiid": aiid,
+        'acc': acc,
+        'aiText': aiListira[aiid][0],
+        'aiGenType': aiListira[aiid][1],
+        'humanText': humanListira[hid]
+    }
+    answersIra.append(answer)
+    if (uid in usersIra):
+        usersIra[uid]['answers'].append(answer)
+    else:
+        usersIra[uid] = {
+            'referrer': referer,
+            'age': age,
+            'education': education,
+            'experience': experience,
+            'answers': [answer]
+            }
+    if (len(usersIra[uid]['answers']) > maxQ):
+        maxQ = len(usersIra[uid]['answers'])
+
+for (ansid, referer, uid, age, experience,education, hid, aiid, acc) in baseTweets:
+
+
+    answer = {
+        'hid': hid,
+        "aiid": aiid,
+        'acc': acc,
+        'aiText': aiList[aiid][0],
+        'aiGenType': aiList[aiid][1],
+        'humanText': humanList[hid]
+    }
+    answersBase.append(answer)
+    if (uid in usersBase):
+        usersBase[uid]['answers'].append(answer)
+    else:
+        usersBase[uid] = {
+            'referrer': referer,
+            'age': age,
+            'education': education,
+            'experience': experience,
+            'answers': [answer]
+            }
+    if (len(users[uid]['answers']) > maxQ):
+        maxQ = len(users[uid]['answers'])
+
+
+
+
+
 for i in range(len(aiList)):
     aiList[i] = {
         'text': aiList[i][0],
@@ -73,21 +148,58 @@ for i in range(len(aiList)):
         "wrong": 0
 
     }
+
+    
+    
 for i in range(len(humanList)):
+
+
+
 
     humanList[i] = {
         'text': humanList[i],
         "right": 0,
         "wrong": 0
     }
+
+    
+    
+    
 tRight = 0
 
+
+
+
+
+
+for i in range(len(aiListira)):
+    aiListira[i] = {
+        'text': aiListira[i][0],
+        'genType': aiListira[1],
+        "right": 0,
+        "wrong": 0
+
+    }
+for i in range(len(humanListira)):
+
+    
+    humanListira[i] = {
+        'text': humanListira[i],
+        "right": 0,
+        "wrong": 0
+    }
+
+
+
+    
 for answer in answers:
     aiList[answer['aiid']]["right"] += answer["acc"]
     aiList[answer['aiid']]["wrong"] -= (answer["acc"]-1)
     humanList[answer['hid']]["right"] += answer["acc"]
     humanList[answer['hid']]["wrong"] -= (answer["acc"]-1)
     tRight += answer["acc"]
+
+
 
 print(len(users), " responses so far")
 print("Average Accuracy: ",round(tRight/len(answers)*100,2),"%")
@@ -127,9 +239,9 @@ if (analysisType == "changeOverTime"):
     fig, ax = plt.subplots()
     lengthToPlot = 10
 
-    ax.set_ylim([0, 100])
+    ax.set_ylim([40,80])
 
-    ax.plot([i for i in range(0, lengthToPlot)], [
+    ax.plot([i for i in range(1, lengthToPlot+1)], [
             right[i]/(right[i]+wrong[i])*100 for i in range(0, lengthToPlot)])#,color='white')
     """ax.spines['bottom'].set_color('white')
     ax.spines['top'].set_color('white') 
@@ -139,13 +251,14 @@ if (analysisType == "changeOverTime"):
     ax.yaxis.label.set_color('white') """
     ax.set_xlabel('Question #')
     ax.set_ylabel('Accuracy (%)')
-
+    plt.grid(True,'both','both',alpha=0.3)
     ax.tick_params(axis='x')#, colors='white')
     ax.tick_params(axis='y')#, colors='white')
-
+    plt.title("Figure 1. Change in accuracy over time")
     plt.savefig('demo.png')#, transparent=True)
 
     plt.show()
+
 if (analysisType == "changeOverTimeAverage"):
 
     pri = 0
@@ -315,7 +428,7 @@ if (analysisType == "aiGenType"):
     typeCountRight = [0 for i in range(6)]
     typeCountWrong = [0 for i in range(6)]
 
-    for answer in answers:
+    for answer in answersBase:
         ind = 0
         if (type(answer["aiGenType"]) != int):
             ind = genTypes.index(answer["aiGenType"])
@@ -338,6 +451,46 @@ if (analysisType == "aiGenType"):
     ax.tick_params(axis='y', colors='white')
     ax.bar(genTypes, [typeCountRight[i]/(typeCountRight[i] +
            typeCountWrong[i])*100 for i in range(0, len(genTypes))],color="white")
+    plt.savefig('demo.png', transparent=True)
+
+    plt.show()
+
+
+if (analysisType == "aiGenTypeIRA"):
+
+    genTypes = ["0","1","2","3","leftNone","leftBasic","leftSpecific","rightNone","rightBasic","rightSpecific"]
+    typeCountRight = [0 for i in range(len(genTypes))]
+    typeCountWrong = [0 for i in range(len(genTypes))]
+
+    for answer in answersIra:
+        ind = 0
+        if (type(answer["aiGenType"]) != int):
+            print(answer)
+            ind = genTypes.index(answer["aiGenType"])
+        else:
+            ind = answer["aiGenType"]
+        if (answer["acc"]):
+            typeCountRight[ind] += 1
+        else:
+            typeCountWrong[ind] += 1
+    fig, ax = plt.subplots()
+    ax.set_ylim(40, 70)
+    """ ax.spines['bottom'].set_color('white')
+    ax.spines['top'].set_color('white') 
+    ax.spines['right'].set_color('white')
+    ax.spines['left'].set_color('white')
+    ax.xaxis.label.set_color('white')
+    ax.yaxis.label.set_color('white')
+
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white') """
+    ax.set_xlabel('Generation Type')
+    ax.set_ylabel('Accuracy (%)')
+    print(typeCountRight)
+    print(typeCountWrong)
+
+    ax.bar(genTypes, [typeCountRight[i]/(typeCountRight[i] +
+           typeCountWrong[i])*100 for i in range(0, len(genTypes))])#,color="white")
     plt.savefig('demo.png', transparent=True)
 
     plt.show()

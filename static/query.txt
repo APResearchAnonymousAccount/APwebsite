@@ -1,0 +1,2 @@
+SELECT users.referer, users.uid, answers.acc FROM answers INNER JOIN users ON users.uid =
+answers.uid WHERE users.referer != 'test'
