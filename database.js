@@ -1,6 +1,7 @@
 const mysql = require('mysql');
 require('dotenv').config()
 
+answersTable = [][Nunber(process.env.IRA)]
 // Database Connection for Production
 
 // let config = {
@@ -99,7 +100,7 @@ const getScore = async (uid) => {
     if (uid != null) {
         var answers = await run(`
     SELECT acc
-    FROM answers
+    FROM ${answersTable}
     WHERE uid = ?;
 `, [uid]);
         var right = 0;
@@ -118,7 +119,7 @@ const getAnswerList = async (uid) => {
     if (uid != null) {
         var answers = await run(`
     SELECT hid,aiid
-    FROM answers
+    FROM ${answersTable}
     WHERE uid = ?;
 `, [uid]);
         return answers

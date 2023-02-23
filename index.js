@@ -5,8 +5,16 @@ const path = require("path");
 const { randomBytes } = require("crypto");
 const app = express();
 const database = require('./database.js')
-const humanList = require("./human.json")
-const aiList = require("./ai.json")
+
+var ira = true;
+if(ira){
+    const humanList = require("./human.json")
+    const aiList = require("./ai.json")
+}else{
+
+}
+
+
 
 const {
     v1: uuidv1,
@@ -40,30 +48,40 @@ app.post("/newUser", async (req, res) => {
 });
 app.get("/getQuestion", async (req, res) => {
     var uid = req.cookies.userId
-    if (uid == undefined) {
+    if (uid == undefined || uid == null) {
         return res.status(302).redirect("/")
     }
+
     var uList = await database.getAnswerList(uid)
     var uListHuman = []
     var uListAI = []
+    if(req.query.aiid != "n"){
+        uListAI.push(parseInt(req.query.aiid))
 
+    }
+    if(req.query.hid != "n"){
+        uListHuman.push(parseInt(req.query.hid))
+
+    }
     uList.forEach((element, index) => {
         uListHuman.push(element.hid)
         uListAI.push(element.aiid)
     });
-    
+
     var hid = Math.floor(Math.random() * humanList.length)
     var aiid = Math.floor(Math.random() * aiList.length)
 
     var i = 0;
     var reversePair = false;
+    var siblingPair = false;
     for (var j = 0; j < uListAI.length; j++) {
         if (hid == aiList[j][1]) {
             reversePair = true;
         }
     }
-    if (aiList[aiid][1] != "o") {
+    if (aiList[aiid][1] != "o" && aiList[aiid][1] != "c" && aiList[aiid][1] != "d" && aiList[aiid][1] != "c2" && aiList[aiid][1] != "d2") {
         for (var j = 0; j < uListAI.length; j++) {
+
             if (aiList[aiid][1] == aiList[uListAI[j]][1]) {
                 siblingPair = true;
             }
@@ -89,8 +107,9 @@ app.get("/getQuestion", async (req, res) => {
         }
     }
     i = 0;
-    var siblingPair = false;
-    while (uListAI.includes(aiid) == true || uListHuman.includes(aiList[aiid][1] || siblingPair)) {
+    console.log(uListAI+' | '+aiid)
+    console.log( uListAI.includes(aiid) == true)
+    while (aiList[i][1] == hid || uListAI.includes(aiid) == true || uListHuman.includes(aiList[aiid][1]) || siblingPair) {
         i++
         aiid++
         aiid = aiid % aiList.length
@@ -102,7 +121,7 @@ app.get("/getQuestion", async (req, res) => {
 
         }
         siblingPair = false
-        if (aiList[aiid][1] != "o") {
+        if (aiList[aiid][1] != "o" && aiList[aiid][1] != "c" && aiList[aiid][1] != "d" && aiList[aiid][1] != "c2" && aiList[aiid][1] != "d2") {
             for (var j = 0; j < uListAI.length; j++) {
                 if (aiList[aiid][1] == aiList[uListAI[j]][1]) {
                     siblingPair = true;
@@ -158,8 +177,14 @@ app.get("/getSettings", async (req, res) => {
 
 });
 app.post("/postAnswer", async (req, res) => {
+    var uid = req.cookies.userId
+
+    if (uid == undefined || uid == null) {
+        return res.status(302).redirect("/")
+    }
+
     var question = req.body;
-    database.logAnswer(question.hid, question.aiid, req.cookies.userId, question.acc)
+    database.logAnswer(question.hid, question.aiid, uid, question.acc)
     res.sendStatus(200)
     res.end()
     return
@@ -180,7 +205,7 @@ app.post("/postAnswer", async (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'static')));
 
-app.listen(8080);
+app.listen(4000);
 process.on("unhandledRejection", (error) => {
     throw error;
 });
