@@ -5,9 +5,17 @@ const path = require("path");
 const { randomBytes } = require("crypto");
 const app = express();
 const database = require('./database.js')
-const humanList = require("./human.json")
-const aiList = require("./ai.json")
-
+var humanList
+var aiList
+require('dotenv').config()
+var ira = Number(process.env.IRA)
+if(ira == 0){
+    humanList = require("./human.json")
+    aiList = require("./ai.json")
+}else {
+    humanList = require("./humanIRA.json")
+    aiList = require("./aiIRA.json")
+}
 const {
     v1: uuidv1,
     v4: uuidv4,
@@ -65,19 +73,21 @@ app.get("/getQuestion", async (req, res) => {
 
     var i = 0;
     var reversePair = false;
+    var siblingPair = false;
+    if(ira == 0){
     for (var j = 0; j < uListAI.length; j++) {
         if (hid == aiList[j][1]) {
             reversePair = true;
         }
     }
-    if (aiList[aiid][1] != "o") {
+    if (aiList[aiid][1] != "o" && aiList[aiid][1] != "c" && aiList[aiid][1] != "d" && aiList[aiid][1] != "c2" && aiList[aiid][1] != "d2") {
         for (var j = 0; j < uListAI.length; j++) {
-            console.log(uListAI[j])
 
             if (aiList[aiid][1] == aiList[uListAI[j]][1]) {
                 siblingPair = true;
             }
         }
+    }
     }
     var fail = false;
     while (uListHuman.includes(hid) == true || reversePair) {
@@ -92,15 +102,19 @@ app.get("/getQuestion", async (req, res) => {
 
         }
         reversePair = false;
+
+        if(ira == 0){
+
         for (var j = 0; j < uListAI.length; j++) {
             if (hid == aiList[uListAI[j]][1]) {
                 reversePair = true;
             }
         }
+        }
     }
     i = 0;
-    var siblingPair = false;
-    while (uListAI.includes(aiid) == true || uListHuman.includes(aiList[aiid][1] || siblingPair)) {
+    
+    while (uListAI.includes(aiid) || (ira == 0 && (aiList[aiid][1] == hid ||  uListHuman.includes(aiList[aiid][1]) || siblingPair))) {
         i++
         aiid++
         aiid = aiid % aiList.length
@@ -112,13 +126,16 @@ app.get("/getQuestion", async (req, res) => {
 
         }
         siblingPair = false
-        if (aiList[aiid][1] != "o") {
+        if(ira == 0){
+
+        if (aiList[aiid][1] != "o" && aiList[aiid][1] != "c" && aiList[aiid][1] != "d" && aiList[aiid][1] != "c2" && aiList[aiid][1] != "d2") {
             for (var j = 0; j < uListAI.length; j++) {
                 if (aiList[aiid][1] == aiList[uListAI[j]][1]) {
                     siblingPair = true;
                 }
             }
         }
+    }
     }
     if (fail) {
         return res.json({end:true})

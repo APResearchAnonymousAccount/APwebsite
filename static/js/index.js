@@ -2,9 +2,13 @@ const queryString = window.location.search;
 const parameters = new URLSearchParams(queryString);
 const referer = parameters.get('referrer');
 const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
-
+var tldrClicked = false;
+var letterIndex = 0;
 var testing = false;
 var after = false;
+var tryPlay = false
+var aiList = [];
+var humanList = [];
 var superIndex = 0;
 var qIndex = 0
 var introMusic = new Audio("music/sprachZarathustra.mp3");
@@ -119,6 +123,8 @@ function audioVolumeOut(q) {   // Source: https://stackoverflow.com/questions/74
 };
 
 function intro() {
+
+    letterIndex = 0
     if (superIndex == 0) {
         settings.music = document.getElementsByName("musicSwitch")[0].checked
         settings.narration = document.getElementsByName("narrationSwitch")[0].checked
@@ -126,30 +132,69 @@ function intro() {
     if (settings.music) {
         introMusic.play()
     }
-    var introText = ["We live in a world full of information. Modern life is a constant stream of information, bombarding us with posts, messages, and articles. It is no surprise then, that information has been weaponized, used to subvert, mislead, divide and deceive. Powerful entities create false, misleading, or incomplete information to push a narrative that suits their interests. In order to influence foreign politics, the governments of multiple nations, including Russia, China, and Iran, have all sponsored far-reaching “disinformation” campaigns.", "Now, modern technology is poised to worsen this problem further. Artificial Intelligence algorithms can be used to write convincing posts, either spreading false information, or simply arguing in favor of certain positions. AI-powered bots are hard to detect and could be used to mass-produce artificial accounts and posts on a scale never seen before.", "However, although AI models have been trained to imitate humans, they are still fundamentally different. Given that, by some metrics, the best language generation model has only one hundredth the power of the human brain, it may be possible for people to learn to distinguish AI-generated political posts from human-written posts. To test this hypothesis, I made this experiment. You will be shown a series of pairs of posts. In each pair, one post is AI-generated, and one is a public tweet. Your task is to determine which one is AI-generated. Click those you think are AI-generated, and avoid those you think are real tweets."]
+    var introText = ["We live in a world full of information. Modern life is a constant stream of information, bombarding us with posts, messages, and articles. It is no surprise then, that information has been weaponized, used to subvert, mislead, divide and deceive. Powerful entities create false, misleading, or incomplete information to push a narrative that suits their interests. In order to influence foreign politics, the governments of multiple nations, including Russia, China, and Iran, have all sponsored far-reaching “disinformation” campaigns.", "Now, modern technology is poised to worsen this problem further. Artificial Intelligence algorithms can be used to write convincing posts, either spreading false information, or simply arguing in favor of certain positions. AI-powered bots are hard to detect and could be used to mass-produce artificial accounts and posts on a scale never seen before.", "However, although AI models have been trained to imitate humans, they are still fundamentally different. Given that, by some metrics, the best language generation model has only one hundredth the power of the human brain, it may be possible for people to learn to distinguish AI-generated political posts from human-written posts. To test this hypothesis, I made this experiment. You will be shown a series of pairs of posts. In each pair, one post is AI-generated, and one is a public tweet written by Russia disinformation agents. Your task is to determine which one is AI-generated. Click those you think are AI-generated, and avoid those you think are real tweets."]
+
     var split = introText[superIndex].split(" ")
     var maxLength = split.reduce((a, b) => { return Math.max(typeof a == "string" ? a.length : a, b.length) });
     var midBox = document.getElementById("mid-box")
-
     midBox.innerHTML = ""
-    var computedStyle = getComputedStyle(midBox);
-    var midBoxWidth = midBox.clientWidth;
-    midBoxWidth -= parseFloat(computedStyle.paddingLeft) + parseFloat(computedStyle.paddingRight);
-    var midBoxHeight = midBox.clientHeight;
-    midBoxHeight -= parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom);
-
-    const fontSize = Math.floor((midBoxWidth + midBoxHeight) / 50)
-    const letterWidth = 54.2 / 3 * fontSize / 30
-    var lettersMax = (midBoxWidth - midBoxWidth % letterWidth) / letterWidth
-    console.log(lettersMax)
-    midBox.style.display = "Block"
     var introTextBox = document.createElement("p")
-    introTextBox.classList.add("introText");
     introTextBox.style.fontFamily = "monospace"
+    introTextBox.innerHTML = "█"
+    midBox.style.display = "Block"
+    introTextBox.classList.add("introText");
+    if(vw > 750) {
+        introTextBox.style.height = "calc(80vh - 18% - 38px)"
+
+    }else{
+        introTextBox.style.height = "calc(100vh - 18% - 38px)"
+
+    }
+
+    midBox.appendChild(introTextBox)
+
+    var tldrButton = document.createElement("button")
+    tldrButton.id="tldrButton"
+    tldrButton.innerText = "Skip Intro"
+    tldrButton.setAttribute("onclick","tldr()")
+    midBox.appendChild(tldrButton)
+    var longest = 2
+    var splitLongest = introText[longest].split(" ")
+    var introTextBoxWidth = introTextBox.clientWidth;
+    var introTextBoxHeight = introTextBox.clientHeight;
+
+
+    var fontSize = 72;
+    var minFontSize = 10;
+    var testBox = document.getElementById('testBox')
+
+
+    while(fontSize > minFontSize){
+        testBox.style.fontSize = fontSize+"px"
+        var charWidth = testBox.clientWidth/10;
+        var charHeight = testBox.clientHeight;
+        maxChars = Math.floor(introTextBoxWidth/charWidth)
+        var lines = 1
+        var numChars = 0
+        for(var i = 0;i<splitLongest.length;i++){
+            numChars+= splitLongest[i].length +1
+            if(numChars > maxChars){
+                numChars = splitLongest[i].length +1
+                lines++
+            }
+        }
+        if(lines*charHeight < introTextBoxHeight){
+            break;
+        }
+        fontSize --
+    }
     introTextBox.style.fontSize = fontSize + "px"
 
-    introTextBox.innerHTML = "█"
-    midBox.appendChild(introTextBox)
+    const letterWidth = 54.2 / 3 * fontSize / 30
+    var lettersMax = (introTextBoxWidth - introTextBoxWidth % letterWidth) / letterWidth
+    console.log(lettersMax)
+    introTextBox.style.fontSize = fontSize + "px"
+
 
     introTextBox.classList.add("introText");
     midBox.style.justifyContent = "center"
@@ -157,7 +202,7 @@ function intro() {
         ".": 500,
         ",": 100,
     }
-    var baseInt = 20
+    var baseInt = 10
     if (testing) {
         alternateIntervals = {
             ".": 1,
@@ -166,16 +211,16 @@ function intro() {
         var baseInt = 1
 
     }
-    var index = 0
     var letter = ""
     var currentLine = "█"
     var wordIndex = 0;
     function nextLetter(timestamp, startTime) {
-        if(qPreload === null && getCookie("userId") === ""){
+        if(tldrClicked){return ;}
+        if(qPreload === null && getCookie("userId") != ""){
             qPreload = fetch("/getQuestion?aiid=n&hid=n")
         }
         var runtime = timestamp - startTime
-        letter = introText[superIndex][index]
+        letter = introText[superIndex][letterIndex]
         inverval = letter in alternateIntervals ? alternateIntervals[letter] : baseInt
         if (runtime < inverval) {
             requestAnimationFrame((ts) => nextLetter(ts, startTime))
@@ -185,7 +230,7 @@ function intro() {
                 var previous = introTextBox.innerHTML.slice(0, introTextBox.innerHTML.length - 1)
                 introTextBox.innerHTML = previous + letter;
                 currentLine += letter;
-                index++;
+                letterIndex++;
                 if (letter == " ") {
                     wordIndex++;
                     //console.log(currentLine + " | "+currentLine.length+" + "+split[wordIndex].length+" / "+lettersMax)
@@ -210,15 +255,36 @@ function intro() {
 
         if (superIndex < introText.length) {
             nextButton.innerText = "Next"
+            
             nextButton.setAttribute('onclick', "intro()")
         } else {
-            nextButton.innerText = "Begin"
-            nextButton.setAttribute('onclick', "fadeToSurvey()")
+            nextButton.innerText = "Next"
+            nextButton.setAttribute('onclick', "tldr()")
 
         }
+        nextButton.style.position = "absolute"
+        nextButton.style.margin = "0"
+        nextButton.style.left = "50%"
+        nextButton.style.transform = "translateX(-50%)"
+        nextButton.style.bottom = "8%"
         midBox.append(nextButton)
     }
+    if(tldrClicked){return ;}
+
 }
+
+
+function tldr(){
+    tldrClicked = true;
+    var midBox = document.getElementById("mid-box")
+    midBox.innerHTML = "<h2>A Quick Summary:</h2><ul><li>Powerful entities can create hordes of fake accounts and posts to push a narrative that is favorable to them</li><li>AI can be used to increase this threat exponentially</li><li>One post is a human-written tweet published by a Russian Disinformation Campaign, one is ai-generated</li><li>Click the post that you think is AI-generated</li><li>Not all posts are political in nature, some are merely \"cover\" posts, used to make accounts look authentic</li></ul>"
+    nextButton = document.createElement("button")
+    nextButton.innerText = "Begin"
+    nextButton.setAttribute('onclick', "fadeToSurvey()")
+    midBox.append(nextButton)
+
+
+}s
 function fadeToSurvey() {
     if (settings.music && !after) {
         audioVolumeOut(introMusic)
@@ -235,10 +301,11 @@ function fadeToSurvey() {
 
 
 }
+var scoreElement
 function surveyTransition() {
     if (settings.music && !after) {
 
-        mainMusic.play()
+        mainMusic.play().catch((error) => { tryPlay = true;})
     } else if (settings.music) {
         afterMusic.play()
     }
@@ -255,19 +322,28 @@ function surveyTransition() {
     leftBox.classList.add("survey-box")
     rightBox.classList.add("survey-box")
     body = document.querySelector("body")
+    
     body.appendChild(leftBox)
     body.appendChild(rightBox)
-    midBox.remove();
 
+    midBox.remove();
+    if(vw < 750 && after){
+        document.body.innerHTML +='<h2 id="score" style="position: fixed; margin: 0.5vh auto; font-size: 7vw; top: calc(100vh - 2em);text-align: center;width: 100vw;"></h2>'
+        scoreElement = document.getElementById("score")
+    } 
     setTimeout(surveyQuestion, 4 * 1000)
 
 
 }
+
 var aiBg
 var humanBg
 var aiBox
 var humanBox
 async function surveyQuestion() {
+    while(getCookie("userId") === ""){
+        await sleep(200)
+    }
     if (instruc === null) {
 
         instruc = document.createElement("h2")
@@ -298,13 +374,29 @@ async function surveyQuestion() {
     }
     var qJSON = await qPreload
     var question = await qJSON.json()
-
+    var i = 0;
+    
 
     if (question.end) {
         fadeToOutro();
         return
     }
+    while(aiList.includes(question.aiid) || humanList.includes(question.hid) ){
+
+        qPreload = fetch("/getQuestion?aiid=n&hid=n")
+        qJSON = await qPreload
+        question = await qJSON.json()
+        i++;
+        if(i > 5){
+            fadeToOutro();
+            return
+        }
+    }
+    humanList.push(question.hid)
+    aiList.push(question.aiid)
+
     qPreload = fetch("/getQuestion?aiid="+question.aiid+"&hid="+question.hid)
+
 
     var side = Math.round(Math.random())
     aiBox = side ? document.getElementById("leftSurveyBox") : document.getElementById("rightSurveyBox")
@@ -320,8 +412,7 @@ async function surveyQuestion() {
     
     aiBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.aiPost
     humanBox.innerHTML = "<h2>" + question.title + "</h2>\n<p>" + question.humanPost
-    fitText("leftSurveyBox")
-    fitText("rightSurveyBox")
+
     humanBox.setAttribute('onclick', "submit(false," + question.hid + "," + question.aiid + ")")
     aiBox.setAttribute('onclick', "submit(true," + question.hid + "," + question.aiid + ")")
     
@@ -329,7 +420,10 @@ async function surveyQuestion() {
     humanBox.appendChild(humanBg)
 }
 async function submit(acc, hid, aiid) {
-
+    if(tryPlay){
+        mainMusic.play()
+        tryPlay = false;
+    }
     humanBox.setAttribute('onclick', "")
     aiBox.setAttribute('onclick', "")
     if (!testing) {
@@ -381,7 +475,19 @@ async function submit(acc, hid, aiid) {
             if (acc) {
                 currentQACC++;
             }
-            message.innerText += " (Total accuracy: " + ((score[0] + currentQACC) / score[1] * 100).toFixed(2) + "%)"
+            if(vw > 750){
+                message.innerText += " (Total accuracy: " + ((score[0] + currentQACC) / score[1] * 100).toFixed(2) + "%)"
+
+            }else{
+                scoreElement = document.getElementById("score")
+
+                if(scoreElement == undefined){
+                    document.body.innerHTML +='<h2 id="score" style="position: fixed; margin: 0.5vh auto; font-size: 7vw; top: calc(100vh - 2em);text-align: center;width: 100vw;"></h2>'
+                }
+                scoreElement = document.getElementById("score")
+
+                scoreElement.innerText = "Total accuracy: " + ((score[0] + currentQACC) / score[1] * 100).toFixed(2) + "%"
+            }
         }
         body.appendChild(message)
         await sleep(2000)
@@ -467,7 +573,7 @@ async function outro() {
     var centerBox = document.createElement("div")
     var outroText = document.createElement("p")
     if (!after) {
-        outroText.innerText = "Thank you for completing this test. If you wish to continue, you may do so as long as you wish. Or, you are also free to leave now. A few notes: just because something was AI generated doesn't mean it's wrong, and just because something is human written doesn't mean its right. This survey was simply to test how realistic these AI generated posts were. Also, given that the \"Human\" posts were taken directly from twitter, there is no way to be sure that they were not AI-generated."
+        outroText.innerHTML = "Thank you for completing this test. If you wish to continue, you may do so as long as you wish. Or, you are also free to leave now.<br>One quick note: just because something was AI generated doesn't mean it's wrong, and just because something is human written doesn't mean it's correct, remember, all the human posts were written by <strong>Russian Disinformation Agents.</strong> This survey was simply to test how realistic these AI generated posts were."
         centerBox.appendChild(outroText)
         contButton = document.createElement("button")
         contButton.innerText = "Continue"
@@ -481,7 +587,7 @@ async function outro() {
 
 
     scoreBox = document.createElement("p")
-    scoreBox.innerText = "Final Acurracy: " + score[0] + "/" + score[1]
+    scoreBox.innerText = "Final Accuracy: " + score[0] + "/" + score[1]
     centerBox.appendChild(scoreBox)
     midBox.appendChild(centerBox)
     document.body.appendChild(midBox)

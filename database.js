@@ -1,5 +1,6 @@
 const mysql = require('mysql');
-require('dotenv').config()
+
+
 
 // Database Connection for Production
 
@@ -70,9 +71,11 @@ const newUser = async (uid, music, narration, age, experience, education, refere
     return ret[0].count;
 };
 const logAnswer = async (hid, aiid, uid, acc) => {
-
+    require('dotenv').config()
+    console.log(Number(process.env.IRA))
+    answersTable = ["answers","answersIRA"][Number(process.env.IRA)]
     await run(`
-        INSERT INTO answers (hid,aiid, uid, acc) VALUES (?,?,?,?)
+        INSERT INTO ${answersTable} (hid,aiid, uid, acc) VALUES (?,?,?,?)
 
     `, [hid, aiid, uid, acc]);
     return
@@ -89,10 +92,13 @@ const getSettings = async (uid) => {
     }
 };
 const getScore = async (uid) => {
+    require('dotenv').config()
+    console.log(Number(process.env.IRA))
+    answersTable = ["answers","answersIRA"][Number(process.env.IRA)]
     if (uid != null) {
         var answers = await run(`
     SELECT acc
-    FROM answers
+    FROM ${answersTable}
     WHERE uid = ?;
 `, [uid]);
         var right = 0;
@@ -108,10 +114,13 @@ const getScore = async (uid) => {
 
 };
 const getAnswerList = async (uid) => {
+    require('dotenv').config()
+    console.log(Number(process.env.IRA))
+    answersTable = ["answers","answersIRA"][Number(process.env.IRA)]
     if (uid != null) {
         var answers = await run(`
     SELECT hid,aiid
-    FROM answers
+    FROM ${answersTable}
     WHERE uid = ?;
 `, [uid]);
         return answers
