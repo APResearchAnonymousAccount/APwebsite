@@ -1,9 +1,13 @@
+#! /bin/python3
 import json
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.linear_model import LinearRegression
 import sqlite3
 import os
 import statistics
 import math
+import sys
 import numpy as np
 
 ages = ["<14", "14-18", "19-22", "23-29", "30-39",
@@ -31,6 +35,7 @@ cursor = mydb.cursor()
 
 analysisIndex = 7
 figIndex = 7
+figIndex = sys.argv[1]
 analysisTypes = ["topTenUsers", "tableDemographics","changeOverTime", "changeOverTimeAverage", "intervalAverageTime", "changeOverTimevsAge", "aiGenType", "aiGenTypeIRA",
                  "aiTextLengthScatter", "aiTextLengthPlot", "participationHistogram", "scatterPlotAge"]
 
@@ -280,12 +285,12 @@ if (analysisType == "fig2"):
     y = np.array([right[i]/(right[i]+wrong[i])*100 for i in range(0, lengthToPlot)])
     print("Standard Deviation: ",statistics.stdev(y))
 
-    ax.scatter(x,y)  # ,color='white')
+    ax.scatter(x,y,label="Mean Accuracies")  # ,color='white')
     ax.plot(x,y,alpha=0.3)
     a, b = np.polyfit(x, y, 1)
-    plt.plot(x, a*x+b)
+    plt.plot(x, a*x+b,label="Trendline - least squares regression")
     print("Gap:",(a*len(x)+b)-(a*1+b))
-
+    ax.legend()
     """ax.spines['bottom'].set_color('white')
     ax.spines['top'].set_color('white') 
     ax.spines['right'].set_color('white')
@@ -297,6 +302,7 @@ if (analysisType == "fig2"):
     plt.grid(True, 'both', 'both', alpha=0.3)
     ax.tick_params(axis='x')  # , colors='white')
     ax.tick_params(axis='y')  # , colors='white')
+
     plt.title("Figure 2. Change in accuracy over time")
     plt.savefig('demo.png')  # , transparent=True)
 
@@ -334,11 +340,11 @@ if (analysisType == "fig3"):
 
     print("Standard Deviation: ",statistics.stdev(y))
 
-    ax.scatter(x,y)  # ,color='white')
+    ax.scatter(x,y,label="Mean Accuracies")  # ,color='white')
     #ax.plot(x,y,alpha=0.3)
     a, b = np.polyfit(x, y, 1)
     print("Gap:",(a*len(x)+b)-(a*1+b))
-    plt.plot(x, a*x+b)
+    plt.plot(x, a*x+b,color="#ff7f0e",label="Trendline - least squares regression")
     """ax.spines['bottom'].set_color('white')
     ax.spines['top'].set_color('white') 
     ax.spines['right'].set_color('white')
@@ -347,6 +353,7 @@ if (analysisType == "fig3"):
     ax.yaxis.label.set_color('white') """
     ax.set_xlabel('Question #')
     ax.set_ylabel('Accuracy (%)')
+    ax.legend()
     plt.grid(True, 'both', 'both', alpha=0.3)
     ax.tick_params(axis='x')  # , colors='white')
     ax.tick_params(axis='y')  # , colors='white')
@@ -354,6 +361,167 @@ if (analysisType == "fig3"):
     #plt.savefig('demo.png')  # , transparent=True)
 
     plt.show()
+
+
+    pri = 0
+    wrong = [0 for i in range(200)]
+    right = [0 for i in range(200)]
+    total = [0 for i in range(200)]
+    for user in users:
+        for i in range(len(users[user]['answers'])):
+            # if(pri<3 and users[user][i]['acc'] != 1):
+            #   print(users[user][i])
+            #  pri += 1
+            if (users[user]['answers'][i]['acc'] == 1):
+                right[i] += 1
+            else:
+                wrong[i] += 1
+            total[i] += 1
+
+
+
+    # right = blurList(1,right)
+    # wrong = blurList(1,wrong)
+    print(total)
+
+    fig, ax = plt.subplots()
+    lengthToPlot = 100
+
+    ax.set_ylim([20, 90])
+
+    x = np.array([i for i in range(1, lengthToPlot+1)])
+    y = np.array([right[i]/(right[i]+wrong[i])*100 for i in range(0, lengthToPlot)])
+
+    print("Standard Deviation: ",statistics.stdev(y))
+
+    ax.scatter(x,y,label="Mean Accuracies")  # ,color='white')
+    #ax.plot(x,y,alpha=0.3)
+    a, b = np.polyfit(x, y, 1)
+    print("Gap:",(a*len(x)+b)-(a*1+b))
+    plt.plot(x, a*x+b,color="#ff7f0e",label="Trendline - least squares regression")
+    """ax.spines['bottom'].set_color('white')
+    ax.spines['top'].set_color('white') 
+    ax.spines['right'].set_color('white')
+    ax.spines['left'].set_color('white')
+    ax.xaxis.label.set_color('white')
+    ax.yaxis.label.set_color('white') """
+    ax.set_xlabel('Question #')
+    ax.set_ylabel('Accuracy (%)')
+    ax.legend()
+    plt.grid(True, 'both', 'both', alpha=0.3)
+    ax.tick_params(axis='x')  # , colors='white')
+    ax.tick_params(axis='y')  # , colors='white')
+    plt.title("Figure 3. Change in accuracy over time - extended")
+    #plt.savefig('demo.png')  # , transparent=True)
+
+    plt.show()
+
+
+
+if (analysisType == "fig9"):
+    agesTotal = [0 for i in ages]
+    agesAcc = [0 for i in ages]
+    xs = []
+    ys = []
+    tots = []
+    num = 0
+    for user in users:
+        if (type(users[user]['age']) == int):
+            total = 0
+            num += 1
+            for i in range(len(users[user]['answers'])):
+                total += users[user]['answers'][i]['acc']
+                agesAcc[users[user]['age']] += users[user]['answers'][i]['acc']
+                agesTotal[users[user]['age']] += 1
+            xs.append(users[user]['age'])
+            ys.append(total/len(users[user]['answers'])*100)
+            tots.append(len(users[user]['answers']))
+    agesAvg = []
+    for i in range(len(ages)):
+        if (agesTotal[i] == 0):
+            agesAvg.append(50)
+            continue
+        agesAvg.append(agesAcc[i]/agesTotal[i]*100)
+
+    print(num, " users with recorded age")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111,projection='3d')
+
+    ax.scatter(xs, tots, ys,alpha=0.7)
+    
+    #ax.plot([i for i in ages[:-1]], agesAvg[:-1])
+    model = LinearRegression()
+    X = np.column_stack((xs,tots))
+    model.fit(X,ys)
+
+    xs_range = np.linspace(min(xs),max(xs),10)
+    tots_range = np.linspace(min(tots),max(tots),10)
+    xs_grid, tots_grid = np.meshgrid(xs_range,tots_range)
+    X_grid = np.column_stack((xs_grid.ravel(),tots_grid.ravel()))
+    y_grid = model.predict(X_grid)
+    y_grid = y_grid.reshape(xs_grid.shape)
+    ax.plot_surface(xs_grid,tots_grid,y_grid,alpha=0.5)
+
+    # x = np.array(xs)
+    # y = np.array(ys)
+    # a, b = np.polyfit(x, y, 1)
+    #plt.plot(x, a*x+b)
+
+    ax.set_ylabel('Question\'s Answered')
+
+    ax.set_zlabel('Average Accuracy(%)')
+    ax.set_zlim([30, 90])
+
+    ax.set_xlabel('Age')
+
+    plt.show()
+
+
+
+
+
+if (analysisType == "fig4v1"):
+    agesTotal = [0 for i in ages]
+    agesAcc = [0 for i in ages]
+    xs = []
+    ys = []
+    tots = []
+    num = 0
+    for user in users:
+        if (type(users[user]['age']) == int):
+            total = 0
+            num += 1
+            for i in range(len(users[user]['answers'])):
+                total += users[user]['answers'][i]['acc']
+                agesAcc[users[user]['age']] += users[user]['answers'][i]['acc']
+                agesTotal[users[user]['age']] += 1
+            xs.append(users[user]['age'])
+            ys.append(total/len(users[user]['answers'])*100)
+            tots.append(len(users[user]['answers']))
+    agesAvg = []
+    for i in range(len(ages)):
+        if (agesTotal[i] == 0):
+            agesAvg.append(50)
+            continue
+        agesAvg.append(agesAcc[i]/agesTotal[i]*100)
+
+    print(num, " users with recorded age")
+
+    fig, ax = plt.subplots()
+    plt.title("Figure 4. Accuracy vs Age")
+    ax.set_ylim([30, 90])
+
+    ax.set_ylabel('Accuracy(%)')
+    ax.set_xlabel('Age')
+    ax.plot([i for i in ages[:-1]], agesAvg[:-1])
+    x = np.array(xs)
+    y = np.array(ys)
+    a, b = np.polyfit(x, y, 1)
+    plt.plot(x, a*x+b)
+    ax.scatter(xs, ys,alpha=0.7,s=tots)
+    plt.show()
+
 
 if (analysisType == "fig4"):
     agesTotal = [0 for i in ages]
@@ -373,6 +541,29 @@ if (analysisType == "fig4"):
             xs.append(users[user]['age'])
             ys.append(total/len(users[user]['answers'])*100)
             tots.append(len(users[user]['answers']))
+    
+    pri = 0
+    wrong = [0 for i in range(200)]
+    right = [0 for i in range(200)]
+    total = [0 for i in range(200)]
+    for user in users:
+        for i in range(len(users[user]['answers'])):
+            # if(pri<3 and users[user][i]['acc'] != 1):
+            #   print(users[user][i])
+            #  pri += 1
+            if (users[user]['answers'][i]['acc'] == 1):
+                right[i] += 1
+            else:
+                wrong[i] += 1
+            total[i] += 1  
+    lengthToPlot = 100
+    x = np.array([i for i in range(1, lengthToPlot+1)])
+    y = np.array([right[i]/(right[i]+wrong[i])*100 for i in range(0, lengthToPlot)])
+    a, b = np.polyfit(x, y, 1)
+    plt.plot(x, a*x+b,color="#ff7f0e",label="Trendline - least squares regression")
+    
+    
+    
     agesAvg = []
     for i in range(len(ages)):
         if (agesTotal[i] == 0):
