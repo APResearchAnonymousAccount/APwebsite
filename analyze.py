@@ -233,7 +233,24 @@ if (analysisType == "topTenUsers"):
     print(topTenAccs)
     print(topTen[2]['acc'])
 
+
 if (analysisType == "fig1"):
+    resps = [0 for i in range(0, 130)]
+
+    for user in users:
+        for i in range(len(users[user]['answers'])):
+            resps[i] += 1
+
+    fig, ax = plt.subplots()
+    ax.set_ylabel('Number of participants')
+    ax.set_xlabel('Index of question')
+    plt.title("Figure 1. Participation Histogram")
+
+    ax.bar([i for i in range(0, 130)], resps)
+    plt.show()
+
+
+if (analysisType == "fig2"):
 
     pri = 0
     wrong = [0 for i in range(200)]
@@ -280,12 +297,12 @@ if (analysisType == "fig1"):
     plt.grid(True, 'both', 'both', alpha=0.3)
     ax.tick_params(axis='x')  # , colors='white')
     ax.tick_params(axis='y')  # , colors='white')
-    plt.title("Figure 1. Change in accuracy over time")
+    plt.title("Figure 2. Change in accuracy over time")
     plt.savefig('demo.png')  # , transparent=True)
 
     plt.show()
 
-if (analysisType == "fig2"):
+if (analysisType == "fig3"):
 
     pri = 0
     wrong = [0 for i in range(200)]
@@ -333,12 +350,12 @@ if (analysisType == "fig2"):
     plt.grid(True, 'both', 'both', alpha=0.3)
     ax.tick_params(axis='x')  # , colors='white')
     ax.tick_params(axis='y')  # , colors='white')
-    plt.title("Figure 2. Change in accuracy over time - extended")
+    plt.title("Figure 3. Change in accuracy over time - extended")
     #plt.savefig('demo.png')  # , transparent=True)
 
     plt.show()
 
-if (analysisType == "fig3"):
+if (analysisType == "fig4"):
     agesTotal = [0 for i in ages]
     agesAcc = [0 for i in ages]
     xs = []
@@ -366,7 +383,7 @@ if (analysisType == "fig3"):
     print(num, " users with recorded age")
 
     fig, ax = plt.subplots()
-    plt.title("Figure 3. Accuracy vs Age")
+    plt.title("Figure 4. Accuracy vs Age")
     ax.set_ylim([30, 90])
 
     ax.set_ylabel('Accuracy(%)')
@@ -381,7 +398,7 @@ if (analysisType == "fig3"):
 
 
     
-if (analysisType == "fig4"):
+if (analysisType == "fig5"):
     educationTotal = [0 for i in educationLevels]
     educationAcc = [0 for i in educationLevels]
     xs = []
@@ -409,7 +426,7 @@ if (analysisType == "fig4"):
     print(num, " users with recorded education")
 
     fig, ax = plt.subplots()
-    plt.title("Figure 4. Accuracy vs Education")
+    plt.title("Figure 5. Accuracy vs Education")
     ax.set_ylim([30, 90])
 
     ax.set_ylabel('Accuracy(%)')
@@ -424,7 +441,7 @@ if (analysisType == "fig4"):
     plt.show()
 
 
-if (analysisType == "fig5"):
+if (analysisType == "fig6"):
     possible = [i for i in range(1,11)]
     experienceTotal = [0 for i in possible]
     experienceAcc = [0 for i in possible]
@@ -453,7 +470,7 @@ if (analysisType == "fig5"):
     print(num, " users with recorded Experience")
 
     fig, ax = plt.subplots()
-    plt.title("Figure 5. Accuracy vs Experience")
+    plt.title("Figure 6. Accuracy vs Experience")
     ax.set_ylim([30, 90])
 
     ax.set_ylabel('Accuracy(%)')
@@ -467,7 +484,7 @@ if (analysisType == "fig5"):
     ax.scatter(xs, ys,alpha=0.7,s=tots)
     plt.show()
 
-if (analysisType == "fig6"):
+if (analysisType == "fig7"):
 
     genTypes = ["p", "o", "d", "d2", "c", "c2"]
     genTypesNames = ["ChatGPT Paraphrase", "ChatGPT Original", "Davinci 1", "Davinci 2", "Curie 1", "Curie 2"]
@@ -494,7 +511,7 @@ if (analysisType == "fig6"):
     ax.yaxis.label.set_color('white') """
     ax.set_xlabel('Generation Type')
     ax.set_ylabel('Accuracy (%)')
-    plt.title("Figure 6. AI Prompt and Model")
+    plt.title("Figure 7. AI Prompt and Model")
 
     """ ax.tick_params(axis='x', colors='white')
     ax.tick_params(axis='y', colors='white') """
@@ -508,7 +525,7 @@ if (analysisType == "fig6"):
 
 
 
-if (analysisType == "fig7"):
+if (analysisType == "fig8"):
 
     genTypes = ["1", "2", "3", "4","5", "leftNone", "leftBasic",
                 "leftSpecific", "rightNone", "rightBasic", "rightSpecific"]
@@ -541,7 +558,7 @@ if (analysisType == "fig7"):
     ax.set_ylabel('Accuracy (%)')
     print(typeCountRight)
     print(typeCountWrong)
-    plt.title("Figure 7. AI Prompting - Further Analysis")
+    plt.title("Figure 8. AI Prompting - Further Analysis")
 
     ax.bar(genTypes, [typeCountRight[i]/(typeCountRight[i] +
            typeCountWrong[i])*100 for i in range(0, len(genTypes))])  # ,color="white")
